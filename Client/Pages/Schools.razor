@@ -1,0 +1,46 @@
+﻿@page "/view/schools"
+@using DocsWASM.Shared.Views;
+@inject HttpClient Http
+
+
+
+<h1 class="display-3" tabindex="-1">Schools</h1>
+<DocsWASM.Client.Pages.Views.Breadcrumb />
+
+@if (schools != null)
+{
+		<div class="d-flex flex-row gap-3">
+		@foreach (var item in schools)
+		{
+			<a class="hoverable py-2 flex-nowrap d-flex align-items-center px-3 w-100" href="/view/yeargroups?school=@item.Name">
+				<div class="col-2">
+					<div class="d-flex" style="height: 23px;width: 46px;">
+						@((MarkupString)item.SvgLogo)
+					</div>
+				</div>
+				<div class="col">
+					<b class="d-block text-truncate">
+						@item.Name
+					</b>
+				</div>
+				<div class="col">
+					@item.Description
+				</div>
+				<div class="col-2">
+					<div class="text-nowrap text-end">
+						@item.DocumentCount
+						<i class="bi bi-file-earmark"></i>
+					</div>
+				</div>
+			</a>
+		}
+		</div>
+}
+@code {
+	private SchoolModel[] schools;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		schools = await Http.GetFromJsonAsync<SchoolModel[]>("content/schools");
+	}
+}

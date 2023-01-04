@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorEnableCompression>false</BlazorEnableCompression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.0" />
+    <PackageReference Include="MySql.Data" Version="8.0.31" />
+    <PackageReference Include="Svg.Skia" Version="0.5.18" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Client\DocsWASM.Client.csproj" />
+    <ProjectReference Include="..\Shared\DocsWASM.Shared.csproj" />
+  </ItemGroup>
+
+
+</Project>

@@ -1,0 +1,17 @@
+﻿@using System.Security.Claims;
+@using Microsoft.AspNetCore.HttpOverrides;
+@using DocsWASM.Pages.LoginRegister
+@model LoginRegisterModels.RegisterView
+
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+	Layout = "../LoginRegister/_Layout";
+}
+<script src="_framework/blazor.server.js"></script>
+<h3 class="display-4 text-center mb-4">CREATE AN ACCOUNT</h3>
+<component type="typeof(DocsWASM.Pages.LoginRegister.Register)" render-mode="Server" param-ipAdress="Model.ipAdress" param-userAgent="Model.userAgent" />
+<style>
+	.validation-message {
+		color: darkred;
+	}
+</style>

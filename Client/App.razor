@@ -1,0 +1,33 @@
+﻿@using DocsWASM.Client.AppState;
+@inject HttpClient Http
+@using DocsWASM.Shared
+@inject Session _Session
+@using Microsoft.AspNetCore.Components;
+@using System.Text.Json;
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p role="alert">Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+@code{
+    protected override async Task OnParametersSetAsync()
+    {
+        var result = await Http.GetAsync("Account/my");
+        if (result.IsSuccessStatusCode)
+        {
+            var strg = await result.Content.ReadAsStringAsync();
+            JsonSerializerOptions options = new(JsonSerializerDefaults.Web);
+            var obj = JsonSerializer.Deserialize<AccountModels.User>(strg, options);
+            _Session.user = obj;
+        }
+    }
+}
+

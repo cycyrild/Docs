@@ -1,0 +1,71 @@
+﻿@page "/"
+@inject HttpClient Http
+@using SkiaSharp;
+@using DocsWASM.Shared;
+@using DocsWASM.Shared.Helpers;
+@using System.Text;
+@using DocsWASM.Client.AppState;
+@using DocsWASM.Client.SharedComponent;
+@inject Actions _Actions
+@inject Session _Session
+@inject IJSRuntime JSRuntime
+
+<h1>Hello</h1>
+<LoadingComponent loading="loading">
+</LoadingComponent>
+@if(documentHeaders!=null)
+{
+	<div style="overflow: auto; overflow-y: hidden;">
+		<div class="d-flex flex-row gap-3">
+			@foreach (var item in documentHeaders.Headers)
+			{
+				<div class="pe-2 flex-shrink-0">
+					<a style="" class="hoverable cell d-flex flex-column p-3" id=@($"d{item.DocumentId}") href=@($"/view/document/{item.DocumentId}")>
+						<div class="text-truncate text-center mb-2" style="width:0; min-width:100%;">@item.DocumentName</div>
+						<img class="imgPicture mx-auto" src="data:image/webp;base64, @Convert.ToBase64String(item.ImgPreview)" />
+
+					</a>
+				</div>
+			}
+		</div>
+	</div>
+
+}
+
+<style>
+	.imgPicture
+	{
+		max-width:100%;
+		height: 250px;
+		object-fit:cover;
+	}
+	.cell
+	{
+		max-width: 440px;
+		min-width: 100%;
+		max-height: 550px;
+	}
+</style>
+
+@code{
+	private DocumentModele.PreviewDocumentHeaders? documentHeaders;
+	private bool loading = false;
+	private bool scrollToLastElement = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		loading = true;
+		documentHeaders = Bson.FromBson<DocumentModele.PreviewDocumentHeaders>(await Http.GetByteArrayAsync("Preview/lastDocuments/all/10"));
+		loading = false;
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!scrollToLastElement && documentHeaders != null && _Session.lastDocumentViewer != null)
+		{
+			await JSRuntime.InvokeVoidAsync("scrollToElement", $"d{_Session.lastDocumentViewer}");
+			scrollToLastElement = true;
+		}
+	}
+
+}

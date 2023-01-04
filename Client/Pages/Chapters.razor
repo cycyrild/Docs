@@ -1,0 +1,68 @@
+﻿@page "/view/chapters"
+@inject HttpClient Http
+@using DocsWASM.Shared;
+@using DocsWASM.Shared.Helpers;
+@using DocsWASM.Shared.Views;
+@using System.Collections.Specialized;
+
+
+<h1 class="display-3" tabindex="-1">Chapters</h1>
+
+<DocsWASM.Client.Pages.Views.Breadcrumb
+school="@school"
+yearGroup="@yearGroup"
+subject="@subjectId" />
+
+@if (chapters != null)
+{
+		<div class="d-flex flex-row gap-3">
+		@foreach (var item in chapters)
+		{
+			<a class="hoverable py-2 px-3 flex-nowrap d-flex align-items-center w-100" href="/view/documentTypes?school=@school&yeargroup=@yearGroup&subjectId=@subjectId&chapterId=@item.Id">
+				<div class="col-6">
+					<b class="d-block text-truncate">
+						@item.Name
+					</b>
+				</div>
+				<div class="col-3">
+					<span class="d-block text-truncate">
+						@item.Subject
+					</span>
+				</div>
+				<div class="col d-none d-lg-block">
+					@item.Description
+				</div>
+				<div class="col text-end">
+					@item.Count
+					<i class="bi bi-files"></i>
+				</div>
+			</a>
+		}
+		</div>
+}
+@code {
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? school { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? yearGroup { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? subjectId { get; set; }
+
+	private ChapterModel[] chapters;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		var query = new NameValueCollection();
+		if (school != null) query["school"] = school;
+		if (yearGroup != null) query["yearGroup"] = yearGroup;
+		if (subjectId != null) query["subjectId"] = subjectId;
+		var queryStrg = $"content/chapters{UriHelper.ToQueryString(query)}";
+
+		chapters = await Http.GetFromJsonAsync<ChapterModel[]>(queryStrg);
+	}
+}

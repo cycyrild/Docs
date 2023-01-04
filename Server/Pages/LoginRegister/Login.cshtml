@@ -1,0 +1,53 @@
+﻿@model DocsWASM.Pages.LoginRegister.LoginRegisterModels.LoginView
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+	Layout = "../LoginRegister/_Layout";
+}
+
+<h3 class="display-4 text-center mb-4">LOGIN TO AN ACCOUNT</h3>
+<form action="/login" method="post" asp-antiforgery="true">
+      <div class="mb-3">
+    <label for="exampleInputEmail1" class="h6 form-label">Email address</label>
+    <input autofocus type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" name="email">
+  </div>
+  <div class="mb-3">
+    <label for="exampleInputPassword1" class="h6 form-label">Password</label>
+    <input type="password" class="form-control" id="exampleInputPassword1" name="password">
+  </div>
+  <div>
+        <button type="submit" class="btn btn-secondary" style="width:125px">
+            <i class="bi bi-door-open"></i>
+            Log in
+        </button>
+        <a class="btn btn-secondary" style="float:right; width:125px" href="/register">
+            <i class="bi bi-person-plus"></i>
+            Register
+        </a>
+    </div>
+</form>
+
+@*<form method="post" action="/login">
+  <div class="mb-3">
+    <label for="exampleInputEmail1" class="h6 form-label">Email address</label>
+    <input autofocus type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" name="email">
+  </div>
+  <div class="mb-3">
+    <label for="exampleInputPassword1" class="h6 form-label">Password</label>
+    <input type="password" class="form-control" id="exampleInputPassword1" name="password">
+  </div>
+  <div>
+        <button type="submit" class="btn btn-secondary" style="width:125px">
+            <i class="bi bi-door-open"></i>
+            Log in
+        </button>
+        <a class="btn btn-secondary" style="float:right; width:125px" href="/register">
+            <i class="bi bi-person-plus"></i>
+            Register
+        </a>
+    </div>
+</form>*@
+@if (Model.badCredentials)
+{
+    <br/>
+    <div class="alert alert-danger my-0" role="alert">invalid username or password</div>
+}

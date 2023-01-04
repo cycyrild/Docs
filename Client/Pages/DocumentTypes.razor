@@ -1,0 +1,77 @@
+﻿@inject HttpClient Http
+@using DocsWASM.Shared;
+@using DocsWASM.Shared.Helpers;
+@using DocsWASM.Shared.Views;
+@using System.Collections.Specialized;
+@page "/view/documenttypes"
+
+<h1 class="display-3" tabindex="-1">Document types</h1>
+
+<DocsWASM.Client.Pages.Views.Breadcrumb
+school="@school"
+yearGroup="@yearGroup"
+subject="@subjectId"
+chapter="@chapterId" />
+
+
+@if (documentTypes != null)
+{
+	<div class="d-flex flex-row gap-3">
+		@foreach (var item in documentTypes)
+		{
+			<a class="hoverable py-2 px-3 flex-nowrap d-flex align-items-center w-100"
+			href="/view/documents?school=@school&yeargroup=@yearGroup&subjectid=@subjectId&chapterid=@chapterId&doctypeid=@item.Id">
+				<div class="col-6">
+					<b class="d-block text-truncate">
+						@item.Name
+					</b>
+				</div>
+				<div class="col text-end">
+					@item.Count
+					<i class="bi bi-files"></i>
+				</div>
+			</a>
+		}
+	</div>
+}
+<style>
+	.cell:hover {
+		transition: background-color 500ms ease-out 0s;
+	}
+
+	.cell:hover {
+		background-color: rgba(0, 0, 0, 0.1);
+	}
+</style>
+@code {
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? school { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? yearGroup { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? subjectId { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? chapterId { get; set; }
+
+	private DocumentTypeModel[] documentTypes;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		var query = new NameValueCollection();
+		if (school != null) query["school"] = school;
+		if (yearGroup != null) query["yeargroup"] = yearGroup;
+		if (subjectId != null) query["subjectid"] = subjectId;
+		if (chapterId != null) query["chapterid"] = chapterId;
+
+		var queryStrg = $"content/doctypes{UriHelper.ToQueryString(query)}";
+
+		documentTypes = await Http.GetFromJsonAsync<DocumentTypeModel[]>(queryStrg);
+	}
+}

@@ -1,0 +1,72 @@
+﻿@inject HttpClient Http
+@using static DocsWASM.Shared.PathModel;
+
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb">
+		@{
+			var values = Enum.GetValues(typeof(paths)).Cast<paths>().ToList();
+			for(int i = 0; i<values.Count; i++)
+			{
+				var index = i;
+				var currenVal = values[index];
+				if (currenVal == currentView)
+					break;
+				var currentPath = path[currenVal];
+
+				<li class="breadcrumb-item @((index == values.Count?"active":""))"><a href="#">@((currentPath != null ? currentPath : "*"))</a></li>
+
+			}
+		}
+	</ol>
+</nav>
+
+@code {
+
+	[Parameter]
+	public string? school { get; set; }
+
+	[Parameter]
+	public string? yearGroup { get; set; }
+
+	[Parameter]
+	public string? subject { get; set; }
+
+	[Parameter]
+	public string? chapter { get; set; }
+
+	[Parameter]
+	public string? docType { get; set; }
+
+	[Parameter]
+	public string? documents { get; set; }
+
+	[Parameter]
+	public paths currentView {get;set;}
+
+	private Dictionary<paths, string?> path = new ();
+
+	string? ConvertToNullIfEmpty(string? strg)
+	{
+		if (strg == "")
+			return null;
+		return strg;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		/*var _yearsGroups = await Http.GetFromJsonAsync<string[]>("documents/getyearsgroups");
+		var _docTypes = await Http.GetFromJsonAsync<Dictionary<byte, string>>("documents/getdoctypes");
+		var _schools = await Http.GetFromJsonAsync<string[]>("documents/getschools");
+		var _chapters = await Http.GetFromJsonAsync<Dictionary<uint, string>>("documents/getchapters");
+		var _subjects = await Http.GetFromJsonAsync<Dictionary<uint, string>>("documents/getsubjects");*/
+		
+		path.Add(paths.schools, ConvertToNullIfEmpty(school));
+		path.Add(paths.yearGroups, ConvertToNullIfEmpty(yearGroup));
+
+		path.Add(paths.subjects, ConvertToNullIfEmpty(subject));
+		path.Add(paths.chapters, ConvertToNullIfEmpty(chapter));
+		path.Add(paths.docTypes, ConvertToNullIfEmpty(docType));
+		path.Add(paths.documents, ConvertToNullIfEmpty(documents));
+	}
+
+}

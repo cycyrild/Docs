@@ -1,0 +1,107 @@
+﻿@page "/view/documents"
+@using DocsWASM.Shared;
+@using DocsWASM.Shared.Helpers;
+@using DocsWASM.Shared.Views;
+@using System.Collections.Specialized;
+@inject HttpClient Http
+
+<h1 class="display-3" tabindex="-1">Documents</h1>
+<DocsWASM.Client.Pages.Views.Breadcrumb school="@school"
+yearGroup="@yearGroup"
+subject="@subjectId"
+chapter="@chapterId"
+docType="@docTypeId"/>
+
+@if (documentTypes != null)
+{
+		<div class="d-flex flex-column gap-3">
+			@foreach (var item in documentTypes.Headers)
+			{
+			<a class="hoverable flex-nowrap d-flex align-items-center gap-3" href="/view/document/@item.DocumentId">
+					<div class="col-2">
+						<img class="imgPicture mx-auto my-2" src="data:image/webp;base64, @Convert.ToBase64String(item.ImgPreview)" />
+					</div>
+					<div class="col" style="min-width:0">
+						<div class="d-flex flex-column">
+							<b class="text-truncate">
+								@item.DocumentName
+							</b>
+							<div class="text-truncate">
+								@item.SchoolName
+							</div>
+							<div class="text-truncate">
+								@item.OwnerUserName
+							</div>
+						</div>
+					</div>
+					<div class="col-2 d-none d-md-block">
+						<div class="d-flex flex-column">
+							<div class="text-truncate">
+								@item.SubjectTypeName
+							</div>
+						<div class="text-truncate text-muted">
+								@item.ChapterName
+							</div>
+						</div>
+					</div>
+					<div class="col-2 d-none d-lg-block">
+						<div class="text-truncate">
+							@item.CreatedDate.ToString("d")
+						</div>
+					</div>
+					<div class="col-2">
+					<div class="text-nowrap text-center">
+							@item.Pages.Count()
+							<i class="bi bi-file-earmark"></i>
+						</div>
+					</div>
+				</a>
+			}
+		</div>
+
+}
+<style>
+	.imgPicture {
+		max-width:100%;
+		max-height:80px;
+	}
+</style>
+
+@code {
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? school { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? yearGroup { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? subjectId { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? chapterId { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? docTypeId { get; set; }
+
+	private DocumentsModel documentTypes;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		var query = new NameValueCollection();
+		if (school != null) query["school"] = school;
+		if (yearGroup != null) query["yeargroup"] = yearGroup;
+		if (subjectId != null) query["subjectid"] = subjectId;
+		if (chapterId != null) query["chapterid"] = chapterId;
+		if (docTypeId != null) query["doctypeid"] = docTypeId
+		;
+		var queryStrg = $"content/documents{UriHelper.ToQueryString(query)}";
+
+		documentTypes = Bson.FromBson<DocumentsModel>(await Http.GetByteArrayAsync(queryStrg));
+	}
+}
+

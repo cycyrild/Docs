@@ -1,0 +1,174 @@
+﻿@using DocsWASM.Shared
+@inherits LayoutComponentBase
+@inject HttpClient Http
+@using DocsWASM.Client.AppState;
+@inject Actions _Actions
+@inject Session _Session
+@inject IJSRuntime JS
+<div class="fade modal" id="searchModal" tabindex="-1" aria-labelledby="searchModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Find resources</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <button class="btn" type="button" id="button-addon1">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <input id="searchInput" type="text" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="navbar fixed-top" style="backdrop-filter: blur(100px); -webkit-backdrop-filter: blur(100px);">
+    <div class="container-fluid flex-nowrap justify-content-start" style="gap:10px">
+        <a href="/" class="me-auto">
+            <img src="/img/logo/docasLargeTransparency.png" style="height: 30px">
+        </a>
+        @*Large screeen*@
+        <div class="flex-grow-1 d-none d-lg-block">
+            <div class="input-group">
+                <button class="btn btn-outline-secondary" type="button">
+                    <i class="bi bi-search"></i>
+                </button>
+                <input type="text" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
+            </div>
+        </div>
+
+        <button class="d-block d-lg-none btn btn-secondary" data-bs-toggle="modal" data-bs-target="#searchModal">
+            <i class="bi bi-search"></i>
+        </button>
+
+        @if (_Session.user != null)
+        {
+            <div class="d-none d-lg-block btn btn-secondary">
+                <i class="bi bi-chat"></i>
+            </div>
+
+            <button class="btn btn-secondary" type="button">
+                <i class="bi bi-pin-angle"></i>
+            </button>
+
+            <div class="dropstart">
+                <button type="button" class="btn btn-secondary" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person"></i>
+                    <div class="d-none d-lg-inline">
+                        @_Session.user.FirstName
+                        <b>@_Session.user.LastName</b>
+                    </div>
+                </button>
+
+
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <i class="bi bi-file-earmark-person"></i>
+                            Show my profile
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="/logout">
+                            <i class="bi bi-door-closed"></i>
+                            Log out
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <i class="bi bi-gear"></i>
+                            Account setting
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        }
+        else
+        {
+            @*Large screeen*@
+            <div class="d-none d-lg-block btn-group text-nowrap" role="group">
+                <a class="btn btn-secondary" role="button" href="/login">
+                    <i class="bi bi-person"></i>
+                    Log in
+                </a>
+                <a class="btn btn-secondary" href="/register">
+                    <i class="bi bi-person-plus" role="button" ></i>
+                    Register
+                </a>
+            </div>
+
+            @*Small screen*@
+            <div class="d-block d-lg-none btn-group text-nowrap" role="group">
+                <a class="btn btn-secondary" role="button" href="/login">
+                    <i class="bi bi-person"></i>
+                </a>
+                <a class="btn btn-secondary" role="button" href="/register">
+                    <i class="bi bi-person-plus"></i>
+                </a>
+            </div>
+        }
+        <button class="btn btn-dark" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
+            <i class="bi bi-list"></i>
+        </button>
+
+
+    </div>
+</nav>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel" style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(5px); background: linear-gradient(rgb(248 249 250 / 88%) 45%, rgb(255 255 255 / 0%) 100%);">
+    <div class="offcanvas-header">
+        <h5 id="offcanvasRightLabel">
+            Docs
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="d-flex flex-column">
+			@if (_Session.user != null)
+			{
+                <div class="py-2 px-1 text-decoration-none text-dark text-center">
+                    <i class="bi bi-person d-block" style="font-size:35px"></i>
+                <span class="d-block">@_Session.user.FirstName <b>@_Session.user.LastName</b></span>
+                <span class="d-block">@Enum.GetName(_Session.user.TypeOfUser)</span>
+                    <span>Member since @_Session.user.CreatedDate</span>
+                </div>
+            }
+            <hr class="my-2" />
+            <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/upload">
+                <i class="bi bi-upload"></i>
+                Share content
+            </a>
+            <hr class="my-2" />
+            <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/">
+                <i class="bi bi-bookmarks"></i>
+                Library
+            </a>
+            <hr class="my-2" />
+            <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/">
+                <i class="bi bi-people"></i>
+                Members
+            </a>
+            <hr class="my-2"/>
+            <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/view/schools">
+                <i class="bi bi-compass"></i>
+                Explore
+            </a>
+        </div>
+    </div>
+</div>
+<div class="container-lg">
+    @Body
+</div>
+@code
+{
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+            await JS.InvokeVoidAsync("offCanvasInit", "offcanvasRight");
+    }
+}

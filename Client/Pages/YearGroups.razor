@@ -1,0 +1,55 @@
+﻿@using DocsWASM.Shared;
+@using DocsWASM.Shared.Helpers;
+@using DocsWASM.Shared.Views;
+@using System.Collections.Specialized;
+@inject HttpClient Http
+@page "/view/yeargroups"
+
+
+<h1 class="display-3" tabindex="-1">Year groups</h1>
+
+<DocsWASM.Client.Pages.Views.Breadcrumb
+school="@school"
+/>
+
+@if (yearGroups != null)
+{
+	<div class="d-flex flex-column gap-3">
+		@foreach (var item in yearGroups)
+		{
+			<a class="hoverable py-2 flex-nowrap d-flex align-items-center w-100 px-3" href="/view/subjects?school=@item.School&yearGroup=@item.Name">
+				<div class="col-6">
+					<b class="d-block text-truncate">
+						@item.Name
+					</b>
+				</div>
+				<div class="col">
+					@item.Description
+				</div>
+				<div class="col-3 text-end">
+					@item.School
+				</div>
+
+			</a>
+		}
+	</div>
+
+}
+
+@code {
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? school { get; set; }
+
+	private YearGroupModel[] yearGroups;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		var query = new NameValueCollection();
+		if (school != null) query["school"] = school;
+		var queryStrg = $"content/yeargroups{UriHelper.ToQueryString(query)}";
+
+		yearGroups = await Http.GetFromJsonAsync<YearGroupModel[]>(queryStrg);
+	}
+
+}

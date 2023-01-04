@@ -1,0 +1,196 @@
+﻿@page "/view/document/{Id:int}"
+@using DocsWASM.Shared;
+@using DocsWASM.Shared.Helpers;
+@using System.Text;
+@using System.Globalization;
+@inject HttpClient Http
+@using DocsWASM.Client.AppState;
+@using DocsWASM.Client.SharedComponent;
+@inject Actions _Actions
+@inject Session _Session
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+<LoadingComponent loading="loading">
+</LoadingComponent>
+@if (document != null)
+{
+	<h1 class="display-1 d-block text-truncate" style="line-height: 1.3;">@document.DocumentHeader.DocumentName</h1>
+	<div class="text-nowrap mb-4" style="overflow: auto;overflow-y: hidden">
+	<div class="d-flex flex-row gap-4">
+		<div>
+			<i class="bi bi-arrows-fullscreen my-auto"></i>
+				@_Session.documentZoomLevel.ToString("000")%
+			<input min="@zoomMin" max="@zoomMax" step="1" value="@_Session.documentZoomLevel" @oninput="InputZoomChanged" type="range">
+		</div>
+		<div class="my-auto">
+			<span class="badge rounded-pill text-bg-secondary">
+				<i class="bi bi-house"></i>
+				School
+			</span>
+			@document.DocumentHeader.SchoolName
+		</div>
+		<div class="my-auto">
+			<span class="badge rounded-pill text-bg-info">
+				<i class="bi bi-info-lg"></i>
+				Subject type
+			</span>
+			@document.DocumentHeader.YearGroup
+		</div>
+		<div class="my-auto">
+			<span class="badge rounded-pill text-bg-warning">
+				<i class="bi bi-inbox"></i>
+				Subject type
+			</span>
+			@document.DocumentHeader.SubjectTypeName
+		</div>
+		<div class="my-auto">
+			<span class="badge rounded-pill text-bg-primary">
+				<i class="bi bi-tags"></i>
+				Chapter
+			</span>
+			@document.DocumentHeader.ChapterName
+		</div class="my-auto">
+		<div class="my-auto">
+			<span class="badge rounded-pill text-bg-dark">
+				<i class="bi bi-info-lg"></i>
+				Document type
+			</span>
+			@document.DocumentHeader.DocTypeName
+		</div>
+		@if (document.DocumentHeader.Description != null)
+		{
+			<div>
+				<span class="badge rounded-pill text-bg-secondary">
+					<i class="bi bi-paragraph"></i>
+					Description
+				</span>
+				@document.DocumentHeader.Description
+			</div>
+		}
+	</div>
+</div>
+}
+
+<div tabindex="0" @ref="documentViewer" class="mb-3 d-flex flex-wrap align-items-center justify-content-evenly gap-2"
+style="align-items: stretch" @onkeydown="Onkeydown" @onkeydown:preventDefault="preventDefault">
+	@if (document != null)
+	{
+		@for (int i = 0; i < document.DocumentHeader.Pages.Count(); i++)
+		{
+			var index = i;
+			var item = document.Page[index];
+			<div class="zoomRow">
+				<img  loading="lazy" class="imgPicture mx-auto" src="@urls[i]"/>
+				<div class="d-flex flex-row justify-content-between">
+					@if(item.IsCorrection)
+					{
+						<span class="badge text-bg-success my-1 d-block text-truncate">
+							<i class="bi bi-check"></i>
+							Correction
+						</span>
+					}
+					else
+					{
+						<div></div>
+					}
+					<div class="text-end text-truncate">
+						<i class="bi bi-file-earmark"></i>
+						@item.PageNo
+					</div>
+				</div>
+			</div>
+		}
+	}
+</div>
+<style>
+	:root {
+		--zoom: @(_Session.documentZoomLevel +"%") ;
+	}
+
+	.zoomRow
+	{
+		width: var(--zoom);	
+		transition: width 500ms;
+		display: block;
+		margin-bottom: 25px;
+	}
+
+	.imgPicture
+	{
+		width:100%;
+	}
+
+	div:focus {
+		outline: none;
+		box-shadow: none;
+	}
+</style>
+
+@code {
+	[Parameter]
+	public int Id { get; set; }
+	private DocumentModele.Document document;
+	private bool loading = false;
+	private bool preventDefault = false;
+	private ElementReference documentViewer;
+	private string[] urls;
+
+	uint zoomMax = 100, zoomMin = 5;
+
+	private void InputZoomChanged(ChangeEventArgs __e)
+	{
+		var val = uint.Parse((string)__e.Value);
+		if (val <= zoomMax && zoomMin >= 5)
+			_Session.documentZoomLevel = val;
+	}
+
+	private void ZoomPlus()
+	{
+		if (_Session.documentZoomLevel < zoomMax)
+			_Session.documentZoomLevel += 5;
+	}
+
+	private void ZoomMinus()
+	{
+		if (_Session.documentZoomLevel > zoomMin)
+			_Session.documentZoomLevel -= 5;
+	}
+
+	public void Onkeydown(KeyboardEventArgs e)
+	{
+		if (e.CtrlKey && e.Code == "ArrowUp")
+		{
+			preventDefault = true;
+			ZoomPlus();
+		}
+		if (e.CtrlKey && e.Code == "ArrowDown")
+		{
+			preventDefault = true;
+			ZoomMinus();
+		}
+		preventDefault = false;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		loading = true;
+		var bytes = await Http.GetByteArrayAsync($"Document/View/{Id}");
+		document = Bson.FromBson<DocumentModele.Document>(bytes);
+		if (document == null) return;
+		_Session.lastDocumentViewer = document.DocumentHeader.DocumentId;
+		urls = await JS.InvokeAsync<string[]>("getObjectsUrls", document.Page.Select(x => new {data = x.Bin, type = DocsWASM.Shared.DocumentModele.dataBinTypesMime[x.DocBinType]}));
+		loading = false;
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if(firstRender) await JSRuntime.InvokeVoidAsync("blazorFocusElement", documentViewer);
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		await JS.InvokeVoidAsync("freeObjectsUrls", new object[] { urls });
+	}
+}

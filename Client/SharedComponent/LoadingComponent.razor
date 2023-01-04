@@ -1,0 +1,14 @@
+﻿@if (loading)
+{
+	<div class="rounded d-flex align-items-center flex-column position-fixed top-50 start-50 translate-middle" style="backdrop-filter: blur(2px);-webkit-backdrop-filter: blur(5px);z-index:10">
+		<div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>
+		<p>Loading...</p>
+	</div>
+	return;
+}
+@code {
+	[Parameter]
+	public bool loading { get; set; }
+}

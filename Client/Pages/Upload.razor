@@ -1,0 +1,330 @@
+﻿@using DocsWASM.Shared.Helpers;
+@using Microsoft.AspNetCore.Authorization;
+@using Toolbelt.Blazor.FileDropZone;
+@using DocsWASM.Shared;
+@using static DocsWASM.Shared.UploadModels;
+@using DocsWASM.Client.DocumentParser;
+@using System.Text
+@using Microsoft.AspNetCore.Components;
+@using System.Net.Http;
+@using static DocsWASM.Shared.Helpers.Bson;
+@using static DocsWASM.Shared.ImageProcessing;
+@using DocsWASM.Client.SharedComponent;
+@implements IAsyncDisposable
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+@page "/upload"
+<h1 class="display-1">Share content</h1>
+<LoadingComponent loading="isLoading">
+</LoadingComponent>
+
+<FileDropZone class="file-drop-zone">
+	<div class="row g-0">
+		<div class="col-sm">
+			<EditForm Model="model" OnValidSubmit="Send">
+				<DataAnnotationsValidator />
+
+				<div class="mb-3">
+					<label for="InputName" class="h6 form-label lead">Document name</label>
+					<InputText type="text" class="form-control" @bind-Value="model.Name" />
+					<ValidationMessage For="() => model.Name" />
+				</div>
+				<div class="mb-3">
+					<label for="Input1" class="h6 form-label lead">Document description</label>
+					<InputText type="text" id="Input1" class="form-control" @bind-Value="model.Description" />
+					<ValidationMessage For="() => model.Description" />
+				</div>
+				<div class="mb-3">
+					<label for="Input3" class="h6 form-label lead">School name</label>
+					<InputSelect class="form-select" id="Input3" @bind-Value="model.SchoolName">
+						@if (schools != null)
+						{
+							<option value="">Select ...</option>
+							@foreach (var dept in schools)
+							{
+								<option value="@dept">@dept</option>
+							}
+						}
+					</InputSelect>
+					<ValidationMessage For="() => model.SchoolName" />
+				</div>
+				<div class="mb-3">
+					<label for="Input2" class="h6 form-label lead">Years group</label>
+					<InputSelect class="form-select" id="Input2" @bind-Value="model.YearGroupName">
+						@if (yearsGroups != null)
+						{
+							<option value="">Select ...</option>
+							@foreach (var dept in yearsGroups)
+							{
+								<option value="@dept">@dept</option>
+							}
+						}
+					</InputSelect>
+					<ValidationMessage For="() => model.YearGroupName" />
+				</div>
+				<div class="mb-3">
+					<label for="Input4" class="h6 form-label lead">Subjects</label>
+					<InputSelect class="form-select" id="Input4" @bind-Value="model.SubjectId">
+						@if (subjects != null)
+						{
+							<option value="">Select ...</option>
+							@foreach (var dept in subjects)
+							{
+								<option value="@dept.Key">@dept.Value</option>
+							}
+						}
+					</InputSelect>
+					<ValidationMessage For="() => model.SubjectId" />
+				</div>
+				<div class="mb-3">
+					<label for="Input4" class="h6 form-label lead">Chapter</label>
+					<InputSelect class="form-select" id="Input4" @bind-Value="model.ChapterId">
+						@if (chapters != null)
+						{
+							<option value="">Select ...</option>
+							@foreach (var dept in chapters.Where(x => x.Key == model.SubjectId))
+							{
+								<option value="@dept.Value.id">@dept.Value.name</option>
+							}
+						}
+					</InputSelect>
+					<ValidationMessage For="() => model.ChapterId" />
+				</div>
+				<div class="mb-3">
+					<label for="InputSelect1" class="h6 form-label lead">Document type</label>
+					<InputSelect class="form-select" id="InputType1" @bind-Value="model.DocumentTypeId">
+						@if (docTypes != null)
+						{
+							<option value="">Select ...</option>
+							@foreach (var dept in docTypes)
+							{
+								<option value="@dept.Key">@dept.Value</option>
+							}
+						}
+					</InputSelect>
+					<ValidationMessage For="() => model.DocumentTypeId" />
+				</div>
+				<div class="mb-3">
+					<label for="Input5" class="h6 form-label lead">File</label>
+					<InputFile OnChange="@LoadFiles" class=@($"form-control {((parsedPages.Count>=maxAllowedPages)?"disabled":"")}") id="Input5"></InputFile>
+					<div class="validation-message">
+						@uploadErrorMsg
+					</div>
+					<ValidationMessage For="() => model.FilePresent" />
+				</div>
+
+				<button type="submit" class="btn btn-secondary mb-3 d-block" style="width:125px">
+					<i class="bi bi-check"></i>
+					Share
+				</button>
+			</EditForm>
+			@if (resultUpload != null)
+			{
+				<div class="alert alert-secondary" role="alert">
+					@resultUpload
+				</div>
+			}
+		</div>
+		<div class="col-sm-3">
+			<div style="overflow: auto;overflow-x: hidden">
+				<div class="d-flex align-items-center flex-column p-2" style="gap:60px">
+					@if (parsedPages.Count > 0)
+					{
+						@for (int i = 0; i < parsedPages.Count; i++)
+						{
+							var index = i;
+							var item = parsedPages[index];
+							<div class="w-100">
+								<div class="accordion mb-2" id=@("a"+i)>
+									<div class="accordion-item">
+										<h2 class="accordion-header">
+											<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@("b"+i)" aria-expanded="false">
+												<div class="d-flex w-75">
+													<span class="text-truncate me-auto">@item.fileName</span>
+													<b class="text-nowrap">p.@item.orginalDocumentPage</b>
+												</div>
+											</button>
+										</h2>
+										<div id="@("b"+i)" class="accordion-collapse collapse" data-bs-parent="#@("a"+i)">
+											<div class="accordion-body">
+												@item.paragraphsString
+											</div>
+										</div>
+									</div>
+								</div>
+
+									@switch (item.fileType)
+									{
+										case dataBinTypesEnum.svg:
+											<img class="imgPicture w-100" src="data:image/svg+xml;base64,@Convert.ToBase64String(item.bin)" />
+											break;
+
+										case dataBinTypesEnum.webp:
+											<img class="imgPicture w-100" src="data:image/webp;base64, @Convert.ToBase64String(item.bin)" />
+											break;
+									}
+
+								<div class="d-flex flex-row mt-1">
+									<button class="btn btn-sm btn-outline-dark d-block me-1 @((i>0?"":"disabled"))" @onclick="(() => DecreaseItemOrder(index))">
+										<i class="bi bi-chevron-compact-left"></i>
+									</button>
+									<button class="btn btn-sm btn-outline-dark d-block me-1 @((i<parsedPages.Count-1?"":"disabled"))" @onclick="(() => IncreaseItemOrder(index))">
+										<i class="bi bi-chevron-compact-right"></i>
+									</button>
+
+									<button class="btn btn-sm btn-outline-dark d-block me-1" @onclick="(() => parsedPages.RemoveAt(index))">
+										<i class="bi bi-trash"></i>
+									</button>
+									<button class=@($"btn btn-sm btn-outline-dark d-block text-truncate {(item.isCorrection?"bg-success": "")} bg-gradient me-auto") @onclick="(()=>ChangeCorrectionState(index))">
+										<i class="bi bi-check"></i>
+										Correction
+									</button>
+									<i class="bi bi-file-earmark"></i>
+									
+									@(i + 1 + "/" + parsedPages.Count)
+								</div>
+
+							</div>
+						}
+					}
+					else
+					{
+						<div class="d-flex flex-column align-items-center">
+							<h5 style="margin-right: auto;margin-left: auto;" class="d-block">
+								DRAG A FILE
+							</h5>
+							<i class="bi bi-upload" style="font-size:45px"></i>
+						</div>
+					}
+
+
+				</div>
+			</div>
+		</div>
+	</div>
+</FileDropZone>
+<style>
+	.file-drop-zone {
+		border: dashed 2px transparent;
+		transition: border linear 0.2s;
+	}
+
+	.file-drop-zone.hover {
+		border: dashed 2px darkorange;
+	}
+
+	.validation-message {
+		color: darkred;
+	}
+
+</style>
+@code {
+	private UploadModel model = new();
+	private string[] yearsGroups;
+	private Dictionary<Byte, string> docTypes;
+	private string[] schools;
+	private Dictionary<uint, SubjectsChapters.chapter> chapters;
+	private Dictionary<uint, string> subjects;
+	private bool isLoading = false;
+	private string? resultUpload = null;
+	private long maxFileSize = 1024 * 5000;
+	private int maxAllowedPages = 12;
+	private string uploadErrorMsg = "";
+	private List<PageModel> parsedPages = new();
+
+	private void ChangeCorrectionState(int index)
+	{
+		parsedPages[index].isCorrection = !parsedPages[index].isCorrection;
+	}
+
+	private void IncreaseItemOrder(int index)
+	{
+		var item = parsedPages[index];
+		parsedPages.RemoveAt(index);
+		parsedPages.Insert(index + 1, item);
+	}
+
+	private void DecreaseItemOrder(int index)
+	{
+		var item = parsedPages[index];
+		parsedPages.RemoveAt(index);
+		parsedPages.Insert(index - 1, item);
+	}
+
+	private async Task Send()
+	{
+		isLoading = true;
+		var content = new ByteArrayContent(ToBson(new UploadSendModel() { Pages = parsedPages, Upload = model }));
+		var result = await Http.PostAsync("Upload/uploadDocuments", content);
+		if (result.StatusCode == System.Net.HttpStatusCode.OK)
+			resultUpload = "Document processed successfully";
+		else
+			resultUpload = "An error has occurred. Check if a file with the same name already exists or if you are logged in.";
+		isLoading = false;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		await JS.InvokeVoidAsync("loadMupdf");
+		var subjectsChapters = await Http.GetFromJsonAsync<SubjectsChapters>("documents/getsubjectschapters");
+		chapters = subjectsChapters.chapters;
+		subjects = subjectsChapters.subjects;
+		yearsGroups = await Http.GetFromJsonAsync<string[]>("documents/getyearsgroups");
+		docTypes = await Http.GetFromJsonAsync<Dictionary<byte, string>>("documents/getdoctypes");
+		schools = await Http.GetFromJsonAsync<string[]>("documents/getschools");
+	}
+
+
+	private async Task LoadFiles(InputFileChangeEventArgs e)
+	{
+		isLoading = true;
+		try
+		{
+			List<(byte[] bin, string fileName)> toParse = new();
+			uploadErrorMsg = "";
+			var files = e.GetMultipleFiles(maxAllowedPages - parsedPages.Count);
+			model.Name = Path.GetFileNameWithoutExtension(files[0].Name);
+
+			foreach (var file in files)
+			{
+				if (!UploadModels.dataBinTypes.ContainsKey(Path.GetExtension(file.Name)))
+					throw new Exception("File extension not supported at this time.");
+
+				using (var ms = new MemoryStream())
+				using (var fileStream = file.OpenReadStream(maxFileSize))
+				{
+					await fileStream.CopyToAsync(ms);
+					toParse.Add((ms.ToArray(), file.Name));
+				}
+			}
+
+			foreach (var item in toParse)
+			{
+				var documentParser = new DocumentParser(JS);
+				var parsedObj = await documentParser.Parser(item.bin, item.fileName);
+				foreach (var subItem in parsedObj)
+				{
+					if (parsedPages.Count < maxAllowedPages)
+						parsedPages.Add(subItem);
+					else
+						uploadErrorMsg = "Page limit per document reached";
+				}
+			}
+
+			if (parsedPages.Count > 0) model.FilePresent = true;
+		}
+		catch(Exception ex)
+		{
+			uploadErrorMsg = ex.Message;
+		}
+		isLoading = false;
+
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		await JS.InvokeVoidAsync("disposeMupdf");
+	}
+
+}
