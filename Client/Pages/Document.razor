@@ -7,21 +7,22 @@
 @using DocsWASM.Client.AppState;
 @using DocsWASM.Client.SharedComponent;
 @inject Actions _Actions
+@inject DocumentZoom _DocumentZoom
 @inject Session _Session
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 @inject IJSRuntime JS
-<LoadingComponent loading="loading">
-</LoadingComponent>
+
+<LoadingComponent loading="loading"></LoadingComponent>
 @if (document != null)
 {
 	<h1 class="display-1 d-block text-truncate" style="line-height: 1.3;">@document.DocumentHeader.DocumentName</h1>
 	<div class="text-nowrap mb-4" style="overflow: auto;overflow-y: hidden">
 	<div class="d-flex flex-row gap-4">
 		<div>
-			<i class="bi bi-arrows-fullscreen my-auto"></i>
-				@_Session.documentZoomLevel.ToString("000")%
-			<input min="@zoomMin" max="@zoomMax" step="1" value="@_Session.documentZoomLevel" @oninput="InputZoomChanged" type="range">
+			<i class="d-inline-block bi bi-arrows-fullscreen my-auto"></i>
+			<span class="d-inline-block" style="width:50px">@(((int)(_DocumentZoom.documentZoomLevel*100)) + " %") </span>
+			<input class="d-inline-block" min="@(_DocumentZoom.zoomMin*100)" max="@(_DocumentZoom.zoomMax*100)" step="1" value="@(_DocumentZoom.documentZoomLevel*100)" @oninput="InputZoomChanged" type="range">
 		</div>
 		<div class="my-auto">
 			<span class="badge rounded-pill text-bg-secondary">
@@ -73,7 +74,7 @@
 }
 
 <div tabindex="0" @ref="documentViewer" class="mb-3 d-flex flex-wrap align-items-center justify-content-evenly gap-2"
-style="align-items: stretch" @onkeydown="Onkeydown" @onkeydown:preventDefault="preventDefault">
+style="align-items: stretch">
 	@if (document != null)
 	{
 		@for (int i = 0; i < document.DocumentHeader.Pages.Count(); i++)
@@ -81,7 +82,11 @@ style="align-items: stretch" @onkeydown="Onkeydown" @onkeydown:preventDefault="p
 			var index = i;
 			var item = document.Page[index];
 			<div class="zoomRow">
-				<img  loading="lazy" class="imgPicture mx-auto" src="@urls[i]"/>
+				<div class="position-relative">
+					<div class="placeHolder" style=""></div>
+					<img loading="lazy" class="imgPicture mx-auto" src="@urls[i]"/>
+				</div>
+				@* position-absolute top-50 start-50 translate-middle*@
 				<div class="d-flex flex-row justify-content-between">
 					@if(item.IsCorrection)
 					{
@@ -103,22 +108,40 @@ style="align-items: stretch" @onkeydown="Onkeydown" @onkeydown:preventDefault="p
 		}
 	}
 </div>
+@((MarkupString)
+(@"
+
+"))
 <style>
-	:root {
-		--zoom: @(_Session.documentZoomLevel +"%") ;
+	.zoomRow {
+		--zoom: @(_DocumentZoom.documentZoomLevel*100)%;
+	}
+
+	.imgPicture{
+		--opacity: @(_DocumentZoom.shouldRender?100:0)%;
 	}
 
 	.zoomRow
 	{
 		width: var(--zoom);	
-		transition: width 500ms;
+		@(!_DocumentZoom.mouseWheelZoom?"transition: width ease-in 125ms;":"")
 		display: block;
 		margin-bottom: 25px;
+	}
+
+	.placeHolder {
+		height: 100%;
+		width: 100%;
+		visibility: @(_DocumentZoom.shouldRender?"hidden":"visible");
+		position: absolute;
+		background-color: #00000078;
 	}
 
 	.imgPicture
 	{
 		width:100%;
+		opacity: var(--opacity);
+		@(_DocumentZoom.shouldRender?"transition: ease-in opacity 250ms":"");
 	}
 
 	div:focus {
@@ -136,46 +159,17 @@ style="align-items: stretch" @onkeydown="Onkeydown" @onkeydown:preventDefault="p
 	private ElementReference documentViewer;
 	private string[] urls;
 
-	uint zoomMax = 100, zoomMin = 5;
-
-	private void InputZoomChanged(ChangeEventArgs __e)
+	private void InputZoomChanged(ChangeEventArgs e)
 	{
-		var val = uint.Parse((string)__e.Value);
-		if (val <= zoomMax && zoomMin >= 5)
-			_Session.documentZoomLevel = val;
-	}
-
-	private void ZoomPlus()
-	{
-		if (_Session.documentZoomLevel < zoomMax)
-			_Session.documentZoomLevel += 5;
-	}
-
-	private void ZoomMinus()
-	{
-		if (_Session.documentZoomLevel > zoomMin)
-			_Session.documentZoomLevel -= 5;
-	}
-
-	public void Onkeydown(KeyboardEventArgs e)
-	{
-		if (e.CtrlKey && e.Code == "ArrowUp")
-		{
-			preventDefault = true;
-			ZoomPlus();
-		}
-		if (e.CtrlKey && e.Code == "ArrowDown")
-		{
-			preventDefault = true;
-			ZoomMinus();
-		}
-		preventDefault = false;
+		var val = (double)int.Parse((string)e.Value);
+		_DocumentZoom.ChangeDocumentZoom(val/(double)100);
 	}
 
 	protected override async Task OnInitializedAsync()
 	{
-
 		loading = true;
+		_DocumentZoom.RefreshZoomDocument += StateHasChanged;
+		await JS.InvokeVoidAsync("pinchZoomLoad", ".zoomRow", "--zoom");
 		var bytes = await Http.GetByteArrayAsync($"Document/View/{Id}");
 		document = Bson.FromBson<DocumentModele.Document>(bytes);
 		if (document == null) return;
@@ -192,5 +186,7 @@ style="align-items: stretch" @onkeydown="Onkeydown" @onkeydown:preventDefault="p
 	public async ValueTask DisposeAsync()
 	{
 		await JS.InvokeVoidAsync("freeObjectsUrls", new object[] { urls });
+		await JS.InvokeVoidAsync("pinchZoomUnload");
+		_DocumentZoom.RefreshZoomDocument -= StateHasChanged;
 	}
 }

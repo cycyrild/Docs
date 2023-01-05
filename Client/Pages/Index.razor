@@ -8,7 +8,7 @@
 @using DocsWASM.Client.SharedComponent;
 @inject Actions _Actions
 @inject Session _Session
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JSRuntime	
 
 <h1>Hello</h1>
 <LoadingComponent loading="loading">
@@ -61,7 +61,8 @@
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		if (!scrollToLastElement && documentHeaders != null && _Session.lastDocumentViewer != null)
+		if (!scrollToLastElement && _Session.lastDocumentViewer != null &&
+			documentHeaders?.Headers.FirstOrDefault(x => x.DocumentId == _Session.lastDocumentViewer) != null)
 		{
 			await JSRuntime.InvokeVoidAsync("scrollToElement", $"d{_Session.lastDocumentViewer}");
 			scrollToLastElement = true;
@@ -69,4 +70,3 @@
 	}
 
 }
-//

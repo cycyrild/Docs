@@ -97,8 +97,7 @@ docType="@docTypeId"/>
 		if (yearGroup != null) query["yeargroup"] = yearGroup;
 		if (subjectId != null) query["subjectid"] = subjectId;
 		if (chapterId != null) query["chapterid"] = chapterId;
-		if (docTypeId != null) query["doctypeid"] = docTypeId
-		;
+		if (docTypeId != null) query["doctypeid"] = docTypeId;
 		var queryStrg = $"content/documents{UriHelper.ToQueryString(query)}";
 
 		documentTypes = Bson.FromBson<DocumentsModel>(await Http.GetByteArrayAsync(queryStrg));

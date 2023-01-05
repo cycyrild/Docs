@@ -15,7 +15,7 @@ namespace DocsWASM.Client
             builder.RootComponents.Add<HeadOutlet>("head::after");
             builder.Services.AddScoped<Actions>();
 			builder.Services.AddScoped<Session>();
-
+			builder.Services.AddScoped<DocumentZoom>();
 			builder.Services.AddScoped(sp =>
             {
                 var hc = new HttpClient(new HttpClientHandler {AllowAutoRedirect = false});

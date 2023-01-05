@@ -21,11 +21,11 @@ body {
 
 .imgPicture {
     background: white;
-    filter: drop-shadow(5px -5px 1px rgba(0, 0, 0, 0.16));
-    border-radius: 10px;
+    filter: drop-shadow(0.25rem -0.25rem .1em rgba(0, 0, 0, 0.16));
+    border-radius: .25rem;
     display: block;
     pointer-events: none;
-    overflow:hidden;
+    overflow: hidden;
 }
 
 h1:focus {

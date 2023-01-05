@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
-    <RunAOTCompilation>false</RunAOTCompilation>
-    <BlazorEnableCompression>true</BlazorEnableCompression>
+    <RunAOTCompilation>true</RunAOTCompilation>
+    <BlazorEnableCompression>false</BlazorEnableCompression>
 
     <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
     <BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
