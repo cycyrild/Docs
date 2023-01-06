@@ -73,8 +73,7 @@
 </div>
 }
 
-<div tabindex="0" @ref="documentViewer" class="mb-3 d-flex flex-wrap align-items-center justify-content-evenly gap-2"
-style="align-items: stretch">
+<div tabindex="0" @ref="documentViewer" class="mb-3 d-flex flex-wrap align-items-center justify-content-evenly gap-2" style="align-items: stretch">
 	@if (document != null)
 	{
 		@for (int i = 0; i < document.DocumentHeader.Pages.Count(); i++)
@@ -110,10 +109,6 @@ style="align-items: stretch">
 		}
 	}
 </div>
-@((MarkupString)
-(@"
-
-"))
 <style>
 	.placeHolder{
 		--opacity: @(_DocumentZoom.shouldRender?"0":"100")%;
@@ -126,7 +121,7 @@ style="align-items: stretch">
 	.zoomRow
 	{
 		width: var(--zoom);	
-		@(!_DocumentZoom.mouseWheelZoom?"transition: width ease-in 125ms;":"")
+		@(_DocumentZoom.mouseWheelZoom?"":"transition: width ease-in 125ms");
 		display: block;
 		margin-bottom: 25px;
 	}
