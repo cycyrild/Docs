@@ -67,20 +67,20 @@ namespace DocsWASM.Server.Controllers.Document
 					{
 						DocumentId = (uint)reader[0],
 						DocumentName = (string)reader[1],
-						Description = reader[2]!= System.DBNull.Value ? (string)reader[2] : null,
+						Description = reader[2] != System.DBNull.Value ? (string)reader[2] : null,
 						SubjectType = (uint)reader[3],
-						SubjectTypeName= (string)reader[4],
-						OwnerUserId= (uint)reader[5],
-						OwnerUserName= (string)reader[6],
+						SubjectTypeName = (string)reader[4],
+						OwnerUserId = (uint)reader[5],
+						OwnerUserName = (string)reader[6],
 						ImgPreview = (byte[])reader[7],
 						DocType = (Byte)reader[8],
-						DocTypeName= (string)reader[9],
+						DocTypeName = (string)reader[9],
 						YearGroup = (string)reader[10],
 						SchoolName = (string)reader[11],
 						ChapterId = (uint)reader[12],
 						ChapterName = (string)reader[13],
-						CreatedDate= (DateTime)reader[14],
-						Pages= ((string)reader[15]).Split(',').Select(x => uint.Parse(x)),
+						CreatedDate = (DateTime)reader[14],
+						Pages = ((string)reader[15]).Split(',').Select(x => uint.Parse(x)),
 					};
 
 			document.Page = new();
@@ -100,7 +100,8 @@ namespace DocsWASM.Server.Controllers.Document
 				docBinType,
 				subjectId,
 				isCorrection,
-				bin
+				bin,
+				placeHolder
 			from pages
 			where documentId = @id";
 			cmd.Parameters.AddWithValue("@id", id);
@@ -121,6 +122,7 @@ namespace DocsWASM.Server.Controllers.Document
 						SubjectType = (uint)reader[10],
 						IsCorrection= Convert.ToBoolean((UInt64)reader[11]),
 						Bin = (byte[])reader[12],
+						PlaceHolder = (byte[])reader[13]
 						
 					});
 

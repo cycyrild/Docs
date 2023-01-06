@@ -82,10 +82,12 @@ style="align-items: stretch">
 			var index = i;
 			var item = document.Page[index];
 			<div class="zoomRow">
-				<div class="position-relative">
-					<div class="placeHolder" style=""></div>
-					<img loading="lazy" class="imgPicture mx-auto" src="@urls[i]"/>
-				</div>
+					<img loading="lazy" class="imgPicture placeHolder mx-auto" src="data:image/webp;base64,@Convert.ToBase64String(item.PlaceHolder)"/>
+					@if(_DocumentZoom.shouldRender)
+					{
+						<img loading="lazy" class="imgPicture mx-auto" src="@urls[i]"/>
+					}
+
 				@* position-absolute top-50 start-50 translate-middle*@
 				<div class="d-flex flex-row justify-content-between">
 					@if(item.IsCorrection)
@@ -113,12 +115,12 @@ style="align-items: stretch">
 
 "))
 <style>
-	.zoomRow {
-		--zoom: @(_DocumentZoom.documentZoomLevel*100)%;
+	.placeHolder{
+		--opacity: @(_DocumentZoom.shouldRender?"0":"100")%;
 	}
 
-	.imgPicture{
-		--opacity: @(_DocumentZoom.shouldRender?100:0)%;
+	.zoomRow {
+		--zoom: @(_DocumentZoom.documentZoomLevel*100)%;
 	}
 
 	.zoomRow
@@ -130,18 +132,15 @@ style="align-items: stretch">
 	}
 
 	.placeHolder {
-		height: 100%;
-		width: 100%;
-		visibility: @(_DocumentZoom.shouldRender?"hidden":"visible");
-		position: absolute;
-		background-color: #00000078;
+		opacity: var(--opacity);
+		display: @(_DocumentZoom.shouldRender?"none":"block");
+		transition: opacity ease-in 125ms;
+		image-rendering: pixelated;
 	}
 
 	.imgPicture
 	{
 		width:100%;
-		opacity: var(--opacity);
-		@(_DocumentZoom.shouldRender?"transition: ease-in opacity 250ms":"");
 	}
 
 	div:focus {

@@ -56,6 +56,7 @@ namespace DocsWASM.Shared
 			public uint SubjectType { get; set; }
 			public bool IsCorrection { get; set; }
 			public byte[] Bin { get; set; }
+			public byte[] PlaceHolder { get; set; }
 		}
 
 		public class PreviewDocumentHeaders

@@ -107,12 +107,13 @@ namespace DocsWASM.Server.Controllers.Document
 						docBinType,
 						subjectId,
 						isCorrection,
-						bin
+						bin,
+                        placeHolder
 						) values ";
 
                 for (int i = 0; i < pageModels.Count(); i++)
                 {
-                    cmd.CommandText += $"(@pageNo{i}, @documentId{i}, @paragraphs{i}, @name{i}, @yearGroup{i}, @school{i}, @chapterId{i}, @docType{i}, @docBinType{i}, @subjectId{i}, @isCorrection{i}, @bin{i}){(i == pageModels.Count() - 1 ? ";" : ",")}\n";
+                    cmd.CommandText += $"(@pageNo{i}, @documentId{i}, @paragraphs{i}, @name{i}, @yearGroup{i}, @school{i}, @chapterId{i}, @docType{i}, @docBinType{i}, @subjectId{i}, @isCorrection{i}, @bin{i}, @placeHolder{i}){(i == pageModels.Count() - 1 ? ";" : ",")}\n";
                     cmd.Parameters.AddWithValue($"@pageNo{i}", i + 1);
                     cmd.Parameters.AddWithValue($"@documentId{i}", docId.Value);
                     cmd.Parameters.AddWithValue($"@paragraphs{i}", pageModels[i].paragraphsString);
@@ -125,9 +126,9 @@ namespace DocsWASM.Server.Controllers.Document
                     cmd.Parameters.AddWithValue($"@subjectId{i}", form.SubjectId);
                     cmd.Parameters.AddWithValue($"@isCorrection{i}", pageModels[i].isCorrection);
                     cmd.Parameters.AddWithValue($"@bin{i}", pageModels[i].bin);
-
-                }
-                await cmd.ExecuteNonQueryAsync();
+					cmd.Parameters.AddWithValue($"@placeHolder{i}", pageModels[i].fileType != dataBinTypesEnum.svg ? ImgToWebP(pageModels[i].bin, 75, 75) : SvgToWebP(pageModels[i].bin, 75, 75));
+				}
+				await cmd.ExecuteNonQueryAsync();
                 return new UploadStatus() { documenId = (uint)docId, success = true };
                 /*}
 				catch (Exception ex)
