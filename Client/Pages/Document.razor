@@ -1,4 +1,5 @@
 ﻿@page "/view/document/{Id:int}"
+@using DocsWASM.Client.SharedComponent.Document;
 @using DocsWASM.Shared;
 @using DocsWASM.Shared.Helpers;
 @using System.Text;
@@ -16,99 +17,195 @@
 <LoadingComponent loading="loading"></LoadingComponent>
 @if (document != null)
 {
-	<h1 class="display-1 d-block text-truncate" style="line-height: 1.3;">@document.DocumentHeader.DocumentName</h1>
-	<div class="text-nowrap mb-4" style="overflow: auto;overflow-y: hidden">
-	<div class="d-flex flex-row gap-4">
-		<div>
-			<i class="d-inline-block bi bi-arrows-fullscreen my-auto"></i>
-			<span class="d-inline-block" style="width:50px">@(((int)(_DocumentZoom.documentZoomLevel*100)) + " %") </span>
-			<input class="d-inline-block" min="@(_DocumentZoom.zoomMin*100)" max="@(_DocumentZoom.zoomMax*100)" step="1" value="@(_DocumentZoom.documentZoomLevel*100)" @oninput="InputZoomChanged" type="range">
-		</div>
-		<div class="my-auto">
-			<span class="badge rounded-pill text-bg-secondary">
-				<i class="bi bi-house"></i>
-				School
-			</span>
-			@document.DocumentHeader.SchoolName
-		</div>
-		<div class="my-auto">
-			<span class="badge rounded-pill text-bg-info">
-				<i class="bi bi-info-lg"></i>
-				Subject type
-			</span>
-			@document.DocumentHeader.YearGroup
-		</div>
-		<div class="my-auto">
-			<span class="badge rounded-pill text-bg-warning">
-				<i class="bi bi-inbox"></i>
-				Subject type
-			</span>
-			@document.DocumentHeader.SubjectTypeName
-		</div>
-		<div class="my-auto">
-			<span class="badge rounded-pill text-bg-primary">
-				<i class="bi bi-tags"></i>
-				Chapter
-			</span>
-			@document.DocumentHeader.ChapterName
-		</div class="my-auto">
-		<div class="my-auto">
-			<span class="badge rounded-pill text-bg-dark">
-				<i class="bi bi-info-lg"></i>
-				Document type
-			</span>
-			@document.DocumentHeader.DocTypeName
-		</div>
-		@if (document.DocumentHeader.Description != null)
-		{
-			<div>
-				<span class="badge rounded-pill text-bg-secondary">
-					<i class="bi bi-paragraph"></i>
-					Description
-				</span>
-				@document.DocumentHeader.Description
-			</div>
-		}
-	</div>
-</div>
-}
-
-<div tabindex="0" @ref="documentViewer" class="mb-3 d-flex flex-wrap align-items-center justify-content-evenly gap-2" style="align-items: stretch">
-	@if (document != null)
+	@*@if(annotationsHelper)
 	{
-		@for (int i = 0; i < document.DocumentHeader.Pages.Count(); i++)
-		{
-			var index = i;
-			var item = document.Page[index];
-			<div class="zoomRow">
-					<img loading="lazy" class="imgPicture placeHolder mx-auto" src="data:image/webp;base64,@Convert.ToBase64String(item.PlaceHolder)"/>
-					@if(_DocumentZoom.shouldRender)
-					{
-						<img loading="lazy" class="imgPicture mx-auto" src="@urls[i]"/>
-					}
+		<AnnotationHelper DocumentId="Id" Page="annotationsHelperPage" GoBack="HideAnnotation"></AnnotationHelper>
+	}*@
 
-				@* position-absolute top-50 start-50 translate-middle*@
-				<div class="d-flex flex-row justify-content-between">
-					@if(item.IsCorrection)
-					{
-						<span class="badge text-bg-success my-1 d-block text-truncate">
-							<i class="bi bi-check"></i>
-							Correction
+	@if(document.DocumentHeader.Approved == 0)
+	{
+		<div class="p-2 bg-light rounded-1 shadow-sm position-absolute top-50 start-50 translate-middle w-75"
+		style="z-index: 1;">
+			<span class="d-block display-6 text-center mb-4">THIS RESOURCE IS NOT YET APPROVED</span>
+			<span class="d-block h6 lead text-center">Come back later, once the resource has been verified</span>
+		</div>
+		<style>
+			html {
+			  overflow: hidden;
+			}
+			.zoomRow {
+				display:none !important
+			}
+		</style>
+	}
+
+
+	<EditDelete 
+		deleteEvent="@(async ()=> await JS.InvokeVoidAsync("alert",$@"""{document.DocumentHeader.DocumentName}"" deleted !"))"
+		editEvent="@(async ()=> await JS.InvokeVoidAsync("alert",$@"""{document.DocumentHeader.DocumentName}"" edited !"))"
+		document="document.DocumentHeader"
+		httpClient="Http" @ref="editDelete">
+	</EditDelete>
+
+	<div class="@(annotationsHelper?"d-none":"d-block")">
+		<h1 class="display-1 d-block text-truncate" style="line-height: 1.3;">@document.DocumentHeader.DocumentName</h1>
+		<div class="text-nowrap mb-2" style="overflow: auto;overflow-y: hidden">
+			<div class="d-flex flex-row gap-4">
+				<div>
+					<i class="d-inline-block bi bi-zoom-in my-auto"></i>
+					<span class="d-inline-block" style="width:50px">@(((int)(_DocumentZoom.documentZoomLevel*100)) + " %") </span>
+					<input class="d-inline-block" min="@(_DocumentZoom.zoomMin*100)" max="@(_DocumentZoom.zoomMax*100)" step="1" value="@(_DocumentZoom.documentZoomLevel*100)" @oninput="InputZoomChanged" type="range">
+				</div>
+				@if(_Session.user!= null && _Session.user.Id == document.DocumentHeader.OwnerUserId)
+				{
+					<div class="my-auto" style="cursor:pointer" @onclick="(()=> editDelete.modal.ModalShow())">
+						<span class="badge rounded-pill text-bg-primary">
+							<i class="bi bi-pencil"></i>
+							Edit document
 						</span>
-					}
-					else
-					{
-						<div></div>
-					}
-					<div class="text-end text-truncate">
-						<i class="bi bi-file-earmark"></i>
-						@item.PageNo
+					</div>
+				}
+				<div class="my-auto">
+					<span class="badge rounded-pill bg-secondary">
+						<i class="bi bi-person"></i>
+						Owner
+					</span>
+					@document.DocumentHeader.OwnerUserName
+				</div>	
+				<div class="my-auto">
+					<span class="badge rounded-pill text-bg-primary">
+						<i class="bi bi-clock"></i>
+						Created date
+					</span>
+					@document.DocumentHeader.CreatedDate
+				</div>
+				<div class="my-auto">
+					<span class="badge rounded-pill text-bg-secondary">
+						<i class="bi bi-house"></i>
+						School
+					</span>
+					@document.DocumentHeader.SchoolName
+				</div>
+				<div class="my-auto">
+					<span class="badge rounded-pill text-bg-info">
+						<i class="bi bi-info-lg"></i>
+						Year group
+					</span>
+					@document.DocumentHeader.YearGroup
+				</div>
+				<div class="my-auto">
+					<span class="badge rounded-pill text-bg-warning">
+						<i class="bi bi-inbox"></i>
+						Subject type
+					</span>
+					@document.DocumentHeader.SubjectTypeName
+				</div>
+				<div class="my-auto">
+					<span class="badge rounded-pill text-bg-primary">
+						<i class="bi bi-tags"></i>
+						Chapter
+					</span>
+					@document.DocumentHeader.ChapterName
+				</div class="my-auto">
+				<div class="my-auto">
+					<span class="badge rounded-pill text-bg-dark">
+						<i class="bi bi-info-lg"></i>
+						Document type
+					</span>
+					@document.DocumentHeader.DocTypeName
+				</div>
+				@if (document.DocumentHeader.Description != null)
+				{
+					<div>
+						<span class="badge rounded-pill text-bg-secondary">
+							<i class="bi bi-paragraph"></i>
+							Description
+						</span>
+						@document.DocumentHeader.Description
+					</div>
+				}
+			</div>
+		</div>
+		<div class="text-nowrap mb-4 text-black" style="overflow: auto;overflow-y: hidden">
+			<div class="d-flex flex-row gap-4">
+				<div class="my-auto">
+					<div class="badge rounded-pill d-block text-truncate bg-gradient@(showCorrection?" bg-success":" text-dark")" @onclick="(()=> showCorrection = !showCorrection)" style="cursor:pointer">
+						<i class="bi bi-check"></i>
+						Show correction
 					</div>
 				</div>
+				<div class="my-auto">
+					<span class="badge rounded-pill text-bg-secondary">
+						<i class="bi bi-files"></i>
+						Navigate to page
+					</span>
+				</div>
+				@for (int i = 0; i < documentPages; i++)
+				{
+					int index = i;
+
+					<div class="my-auto">
+						<div class="badge rounded-pill text-dark" @onclick="@(async ()=> await ScrollToElement($"p{index}"))" style="cursor:pointer">
+							@if(document.Page[index].IsCorrection)
+							{
+								<i class="bi bi-check"></i>
+							}
+							Page @(index +1)
+						</div>
+					</div>
+				}
 			</div>
-		}
-	}
-</div>
+		</div>
+
+		<div tabindex="0" @ref="documentViewer" class="mb-3 d-flex flex-wrap align-items-center justify-content-evenly gap-2" style="align-items: stretch">
+			@for (int i = 0; i < documentPages; i++)
+			{
+				var index = i;
+				var item = document.Page[index];
+				<section class="zoomRow @(item.IsCorrection?"correction":"")" id=@($"p{index}")>
+					<div class="position-relative">
+						<div class="annotations">
+							@*<div style=
+								"background-color:black;
+								width:5%;
+								height:5%;
+								transform: translateX(2%) translateY(3%);"
+							></div>*@
+						</div>
+						<img class="imgPicture placeHolder mx-auto" src="data:image/webp;base64,@Convert.ToBase64String(item.PlaceHolder)"/>
+
+						@if(_DocumentZoom.shouldRender)
+						{
+							<img class="imgPicture mx-auto" src="@urls[i]"/>
+						}
+					</div>
+
+					<div class="d-flex flex-row gap-1">
+						@if(item.IsCorrection)
+						{
+							<span class="badge text-bg-success my-1 d-block text-truncate">
+								<i class="bi bi-check"></i>
+								Correction
+							</span>
+						}
+						else
+						{
+							<div></div>
+						}
+						@*<span class="badge text-bg-info my-1 d-block text-truncate me-auto" style="cursor:pointer;" @onclick="(() => ShowAnnotation(item))">
+							<i class="bi bi-pencil"></i>
+							Annotations					
+						</span>*@
+						<div class="text-end text-truncate">
+							<i class="bi bi-file-earmark"></i>
+							@item.PageNo
+						</div>
+					</div>
+				</section>
+			}
+		</div>
+	</div>
+}
 <style>
 	.placeHolder{
 		--opacity: @(_DocumentZoom.shouldRender?"0":"100")%;
@@ -116,6 +213,18 @@
 
 	.zoomRow {
 		--zoom: @(_DocumentZoom.documentZoomLevel*100)%;
+	}
+
+	.correction {
+		display:@(showCorrection?"visible":"none") !important;
+	}
+
+	.annotations{
+		position:absolute;
+		height:100%;
+		width:100%;
+		z-index:1;
+		overflow:hidden;
 	}
 
 	.zoomRow
@@ -130,7 +239,6 @@
 		opacity: var(--opacity);
 		display: @(_DocumentZoom.shouldRender?"none":"block");
 		transition: opacity ease-in 125ms;
-		image-rendering: pixelated;
 	}
 
 	.imgPicture
@@ -147,11 +255,36 @@
 @code {
 	[Parameter]
 	public int Id { get; set; }
-	private DocumentModele.Document document;
+
+	private DocumentModels.Document document;
 	private bool loading = false;
 	private bool preventDefault = false;
 	private ElementReference documentViewer;
 	private string[] urls;
+	private int documentPages;
+	private bool annotationsHelper = false;
+	private bool editDocument = false;
+	private EditDelete? editDelete;
+	private DocumentModels.Page annotationsHelperPage;
+	private bool showCorrection = true;
+
+
+	private async void HideAnnotation()
+	{
+		annotationsHelper = false;
+		annotationsHelperPage = null;
+	}
+
+	private void ShowAnnotation(DocumentModels.Page page)
+	{
+		annotationsHelper = true;
+		annotationsHelperPage = page;
+	}
+
+	private async Task ScrollToElement(string id)
+	{
+		await JS.InvokeVoidAsync("scrollToElement", id);
+	}
 
 	private void InputZoomChanged(ChangeEventArgs e)
 	{
@@ -163,12 +296,17 @@
 	{
 		loading = true;
 		_DocumentZoom.RefreshZoomDocument += StateHasChanged;
+
 		await JS.InvokeVoidAsync("pinchZoomLoad", ".zoomRow", "--zoom");
-		var bytes = await Http.GetByteArrayAsync($"Document/View/{Id}");
-		document = Bson.FromBson<DocumentModele.Document>(bytes);
-		if (document == null) return;
-		_Session.lastDocumentViewer = document.DocumentHeader.DocumentId;
-		urls = await JS.InvokeAsync<string[]>("getObjectsUrls", document.Page.Select(x => new {data = x.Bin, type = DocsWASM.Shared.DocumentModele.dataBinTypesMime[x.DocBinType]}));
+		var request = await Http.GetAsync($"Document/View/{Id}");
+		if(request.StatusCode == System.Net.HttpStatusCode.OK)
+		{
+			document = Bson.FromBson<DocumentModels.Document>(await request.Content.ReadAsByteArrayAsync());
+			documentPages = document.Page.Count();
+			_Session.lastDocumentViewer = document.DocumentHeader.DocumentId;
+			urls = await JS.InvokeAsync<string[]>("getObjectsUrls", document.Page.Select(x => new {data = x.Bin, type = DocsWASM.Shared.DocumentModels.dataBinTypesMime[x.DocBinType]}));
+		}
+
 		loading = false;
 	}
 
@@ -179,7 +317,8 @@
 
 	public async ValueTask DisposeAsync()
 	{
-		await JS.InvokeVoidAsync("freeObjectsUrls", new object[] { urls });
+		if(urls != null)
+			await JS.InvokeVoidAsync("freeObjectsUrls", new object[] { urls });
 		await JS.InvokeVoidAsync("pinchZoomUnload");
 		_DocumentZoom.RefreshZoomDocument -= StateHasChanged;
 	}

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>DocsWASM</title>
+    <title>DOC'S - COLLABORATIVE SUPPORT SYSTEM</title>
     <base href="/" />
     <!--<link href="DocsWASM.Client.styles.css" rel="stylesheet" />-->
     <link href="manifest.json" rel="manifest" />
@@ -15,6 +15,9 @@
     <script src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="lib/mupdf/mupdf.js"></script>
     <script src="lib/script.js"></script>
+    <script src="lib/typewriter-effect/typewriter.js"></script>
+    <script src="_content/Toolbelt.Blazor.PWA.Updater.Service/script.min.js"></script>
+    <link href="_content/Toolbelt.Blazor.PWA.Updater/Toolbelt.Blazor.PWA.Updater.bundle.scp.css" rel="stylesheet" />
 
     <link href="lib/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
     <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -37,10 +40,12 @@
         <a class="dismiss">🗙</a>
     </div>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
+
     <script>
 
 
     </script>
+    
     <!--<script type="module">
         import { BrotliDecode } from './decode.min.js';
         Blazor.start({

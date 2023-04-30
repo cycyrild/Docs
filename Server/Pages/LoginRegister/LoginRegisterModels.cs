@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DocsWASM.Shared;
+using System.ComponentModel.DataAnnotations;
 
 namespace DocsWASM.Pages.LoginRegister
 {
@@ -37,8 +38,8 @@ namespace DocsWASM.Pages.LoginRegister
             [StringLength(50, ErrorMessage = "Must be less than 50 characters.")]
             public string Email { get; set; }
 
-            [Required]
-            [Range(typeof(bool), "false", "true", ErrorMessage = "This form disallows unapproved ships.")]
+			[Required]
+            [Range(typeof(bool), "false", "true")]
             public bool IsPrivateFullName { get; set; }
 
             [Required(ErrorMessage = "First name is required")]
@@ -55,15 +56,21 @@ namespace DocsWASM.Pages.LoginRegister
             [StringLength(50, MinimumLength = 5, ErrorMessage = "Must be between 5 and 50 characters.")]
             public string Name { get; set; }
 
+            [Required(ErrorMessage = "School name is required")]
+            public string School { get; set; }
+
             [Required(ErrorMessage = "Password is required")]
             [StringLength(50, ErrorMessage = "Must be between 10 and 50 characters.", MinimumLength = 10)]
             [DataType(DataType.Password)]
             public string Password { get; set; }
 
-            [Required(ErrorMessage = "Confirm Password is required.")]
+            [Required(ErrorMessage = "Confirm Password is required")]
             [DataType(DataType.Password)]
             [Compare("Password", ErrorMessage = "Passwords must be identical.")]
             public string ConfirmPassword { get; set; }
+
+            [Required(ErrorMessage = "Account type is Required")]
+            public string UserType { get; set; }
         }
 
     }

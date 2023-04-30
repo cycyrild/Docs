@@ -29,7 +29,7 @@ namespace DocsWASM.Server.Controllers.Document
 		{
 			await Db.Connection.OpenAsync();
 
-			DocumentModele.Document document = new();
+			DocumentModels.Document document = new();
 			MySqlCommand cmd;
 			cmd = Db.Connection.CreateCommand();
 			cmd.CommandText = @"
@@ -48,7 +48,8 @@ namespace DocsWASM.Server.Controllers.Document
 				documents.chapterId,
 				chapterName,
 				documents.createdDate,
-				GROUP_CONCAT(pages.id SEPARATOR ',')
+				GROUP_CONCAT(pages.id SEPARATOR ','),
+				approved
 			FROM documents
 			JOIN pages ON documents.id = pages.documentId
 			inner join chapters on documents.chapterId = chapters.id
@@ -73,7 +74,7 @@ namespace DocsWASM.Server.Controllers.Document
 						OwnerUserId = (uint)reader[5],
 						OwnerUserName = (string)reader[6],
 						ImgPreview = (byte[])reader[7],
-						DocType = (Byte)reader[8],
+						DocType = (byte)reader[8],
 						DocTypeName = (string)reader[9],
 						YearGroup = (string)reader[10],
 						SchoolName = (string)reader[11],
@@ -81,7 +82,10 @@ namespace DocsWASM.Server.Controllers.Document
 						ChapterName = (string)reader[13],
 						CreatedDate = (DateTime)reader[14],
 						Pages = ((string)reader[15]).Split(',').Select(x => uint.Parse(x)),
+						Approved = (byte)reader[16],
 					};
+
+			if (document.DocumentHeader == null) return NotFound();
 
 			document.Page = new();
 

@@ -2,9 +2,10 @@
 {
     public class AccountModels
     {
-        public enum UserType { Admin = 0, Student = 1, Teacher = 2}
+
         public class User
         {
+            public bool Authentified { get; set; }
             public uint Id { get; set; }
             public string UserName { get; set; }
             public string FirstName { get; set; }
@@ -17,7 +18,7 @@
             public bool FullNamePrivacy { get; set; }
             public string? CreatedIp { get; set; }
             public string? LastIp   { get; set; }
-            public UserType TypeOfUser { get; set; }
+            public byte TypeOfUser { get; set; }
         }
     }
 }

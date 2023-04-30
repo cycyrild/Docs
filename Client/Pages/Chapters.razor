@@ -5,20 +5,18 @@
 @using DocsWASM.Shared.Views;
 @using System.Collections.Specialized;
 
+<DocsWASM.Client.Pages.Views.Breadcrumb school="@school" yearGroup="@yearGroup" subject="@subjectId" currentView="PathModels.paths.chapters" />
 
 <h1 class="display-3" tabindex="-1">Chapters</h1>
 
-<DocsWASM.Client.Pages.Views.Breadcrumb
-school="@school"
-yearGroup="@yearGroup"
-subject="@subjectId" />
+
 
 @if (chapters != null)
 {
-		<div class="d-flex flex-row gap-3">
+		<div class="d-flex flex-column gap-3">
 		@foreach (var item in chapters)
 		{
-			<a class="hoverable py-2 px-3 flex-nowrap d-flex align-items-center w-100" href="/view/documentTypes?school=@school&yeargroup=@yearGroup&subjectId=@subjectId&chapterId=@item.Id">
+			<a class="anostyle hoverable py-2 px-3 flex-nowrap d-flex align-items-center w-100 gap-3" href="/view/documentTypes?school=@school&yeargroup=@yearGroup&subjectId=@subjectId&chapterId=@item.Id">
 				<div class="col-6">
 					<b class="d-block text-truncate">
 						@item.Name

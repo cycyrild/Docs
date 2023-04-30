@@ -1,0 +1,41 @@
+﻿@if (showModal)
+{
+    <div class="modal fade show bg-blur" id="myModal" style="display:block; background-color:#0000003d" aria-modal="true" role="dialog">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title">@ModalTitle</h4>
+                        <button type="button" class="btn-close" @onclick="@ModalClose"></button>
+                    </div>
+
+                    <!-- Modal body -->
+                    @ChildContent
+                </div>
+            </div>
+        </div>
+}
+@code
+{
+    [Parameter]
+    public string ModalTitle { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public HttpClient HttpClient { get; set; }
+
+    bool showModal = false;
+
+    public void ModalShow()
+    {
+        showModal = true;
+        StateHasChanged();
+    }
+    public void ModalClose()
+    {
+        showModal = false;
+    }
+}

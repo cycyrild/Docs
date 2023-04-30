@@ -5,19 +5,20 @@
 @inject HttpClient Http
 @page "/view/yeargroups"
 
+<DocsWASM.Client.Pages.Views.Breadcrumb
+school="@school"
+currentView="PathModels.paths.yearGroups" />
 
 <h1 class="display-3" tabindex="-1">Year groups</h1>
 
-<DocsWASM.Client.Pages.Views.Breadcrumb
-school="@school"
-/>
+
 
 @if (yearGroups != null)
 {
 	<div class="d-flex flex-column gap-3">
 		@foreach (var item in yearGroups)
 		{
-			<a class="hoverable py-2 flex-nowrap d-flex align-items-center w-100 px-3" href="/view/subjects?school=@item.School&yearGroup=@item.Name">
+			<a class="anostyle hoverable py-2 flex-nowrap d-flex align-items-center w-100 px-3" href="/view/subjects?school=@item.School&yearGroup=@item.Name">
 				<div class="col-6">
 					<b class="d-block text-truncate">
 						@item.Name

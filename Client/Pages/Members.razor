@@ -1,0 +1,64 @@
+﻿@page "/members"
+@using DocsWASM.Shared
+@using DocsWASM.Client.AppState;
+@using static DocsWASM.Shared.AccountModels;
+@using DocsWASM.Shared.Views;
+@using DocsWASM.Client.SharedComponent;
+@using DocsWASM.Shared.Helpers;
+@inject HttpClient Http
+@inject UserTypes _UserTypes
+
+<LoadingComponent loading="loading">
+</LoadingComponent>
+<h1 class="display-2" tabindex="-1">Members</h1>
+
+<section class="featured">
+	<h2 class="d-flex display-6 gap-4" tabindex="-1">
+		<i class="bi bi-list-stars"></i>
+		Ranking
+	</h2>
+	@if (ranking != null)
+	{
+		<div class="d-flex flex-column gap-1">
+			@foreach(var member in ranking)
+			{
+				<div class="d-flex flex-row justify-content-between flex-nowrap align-items-center hoverable py-2 px-3">
+					<div class="col-4">
+						@if (member.Member.userType.HasValue && _UserTypes.UserTypeByteNameimgHTML != null)
+						{
+							<img src="@_UserTypes.UserTypeByteNameimgHTML[member.Member.userType.Value].imgSRC" width="25" height="25" />
+						}
+					</div>
+					<b class="col d-block text-start">
+						@member.Member.username
+					</b>
+					@if(i<medals.Length)
+					{
+						<div class="col-1">
+							<img src="@medals[i++]" width="25" height="25" />
+						</div>
+					}
+					<div class="col text-end">
+						<i class="bi bi-files"></i>
+						@member.UploadCount
+					</div>
+				</div>
+			}
+		</div>
+
+	}
+</section>
+
+@code {
+	private List<RankingModele>? ranking;
+	private bool loading = false;
+	private int i = 0;
+	private string[] medals = { "img/icon/medal-gold-winner.svg", "img/icon/medal-silver-badge-2.svg", "img/icon/medal-bronze-winner.svg" };
+
+	protected override async Task OnInitializedAsync()
+	{
+		loading = true;
+		ranking = await Http.GetFromJsonAsync<List<RankingModele>>("members/ranking");
+		loading = false;
+	}
+}

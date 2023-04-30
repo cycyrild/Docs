@@ -26,16 +26,21 @@ namespace DocsWASM.Server.Controllers.Document
 
 
         [Route("GetYearsGroups")]
-        public async Task<string[]> GetYearsGroups()
+        public async Task<Dictionary<string, List<string>>> GetYearsGroups()
         {
             await Db.Connection.OpenAsync();
-            List<string> strings = new();
+			Dictionary<string, List<string>> schoolYearGroups = new();
             MySqlCommand cmd = Db.Connection.CreateCommand();
-            cmd.CommandText = "select yearGroup from yearGroups";
+            cmd.CommandText = "select school, yearGroup from yeargroups";
             using (var reader = await cmd.ExecuteReaderAsync())
                 while (await reader.ReadAsync())
-                    strings.Add((string)reader[0]);
-            return strings.ToArray();
+                {
+                    if (!schoolYearGroups.ContainsKey((string)reader[0]))
+                        schoolYearGroups[(string)reader[0]] = new List<string>() { (string)reader[1] };
+                    else
+					    schoolYearGroups[(string)reader[0]].Add((string)reader[1]);
+				}
+			return schoolYearGroups;
         }
 
         [Route("GetDocTypes")]
@@ -44,7 +49,7 @@ namespace DocsWASM.Server.Controllers.Document
 			await Db.Connection.OpenAsync();
 			Dictionary<byte, string> strings = new();
             MySqlCommand cmd = Db.Connection.CreateCommand();
-            cmd.CommandText = "select id, name from docTypes";
+            cmd.CommandText = "select id, name from doctypes";
             using (var reader = await cmd.ExecuteReaderAsync())
                 while (await reader.ReadAsync())
                     strings.Add((byte)reader[0], (string)reader[1]);
@@ -95,7 +100,7 @@ namespace DocsWASM.Server.Controllers.Document
         {
             await Db.Connection.OpenAsync();
             var subjects = new Dictionary<uint, string>();
-            var chapters = new Dictionary<uint, SubjectsChapters.chapter>();
+            var chapters = new Dictionary<uint, List<SubjectsChapters.chapter>>();
 
 
             MySqlCommand cmd;
@@ -112,7 +117,13 @@ namespace DocsWASM.Server.Controllers.Document
                 cmd.Parameters.AddWithValue("@subjectId", subject.Key);
                 using (var reader = await cmd.ExecuteReaderAsync())
                     while (await reader.ReadAsync())
-                        chapters[subject.Key] = new SubjectsChapters.chapter() { id = (uint)reader[0], name = (string)reader[1] };
+                    {
+                        if (chapters.ContainsKey(subject.Key))
+                            chapters[subject.Key].Add(new SubjectsChapters.chapter() { id = (uint)reader[0], name = (string)reader[1] });
+                        else
+                            chapters[subject.Key] = new() { new SubjectsChapters.chapter() { id = (uint)reader[0], name = (string)reader[1] } };
+
+					}
 			}
             return new() { subjects = subjects, chapters = chapters };
 		}

@@ -6,31 +6,82 @@
 @using System.Text;
 @using DocsWASM.Client.AppState;
 @using DocsWASM.Client.SharedComponent;
+@using static DocsWASM.Shared.Helpers.Collection;
 @inject Actions _Actions
 @inject Session _Session
 @inject IJSRuntime JSRuntime	
 
-<h1>Hello</h1>
 <LoadingComponent loading="loading">
 </LoadingComponent>
-@if(documentHeaders!=null)
+
+<h1 class="display-3 text-center mb-5">EDUCATIONAL RESOURCES ADAPTED TO YOUR NEEDS</h1>
+<div class="mb-5">
+	<img class="mx-auto d-block" style="width: 250px" src="/img/logo/docasTransparency.png">
+	<h2 class="lead text-center" style="font-size: 2rem">COLLABORATIVE SUPPORT SYSTEM</h2>
+</div>
+<p class="blockquote text-center" style="font-size: 1.5rem">
+	⸺ START EXPLORING ⸺
+</p>
+@if (chapters != null)
 {
+	<div style="font-family:Courier New;font-size: 1.5rem;" class="text-truncate typewrite d-block text-center mb-5" data-period="2000" data-type='[ @(String.Join(",", chapters.Select(x => '"' + x + '"'))) ]'>
+		<span class="wrap"></span>
+	</div>
+}
+<figcaption class="blockquote-footer mb-5">
+	Created by <cite>Cyril & Ilias & Fahid</cite>
+</figcaption>
+
+@if (_Session.user != null)
+{
+	<h1 class="display-5">
+		Hello @_Session.user.UserName 👋
+	</h1>
+}
+
+<Modal @ref=modal ModalTitle="Title">
+	<button @onclick="@(()=> modal?.ModalClose())">
+		Close
+	</button>
+</Modal>
+
+<section class="featured mb-5">
+	<h2 class="d-flex display-6 gap-4" tabindex="-1">
+		<i class="bi bi-clock"></i>
+		Last document
+	</h2>
 	<div style="overflow: auto; overflow-y: hidden;">
 		<div class="d-flex flex-row gap-3">
+		@if (documentHeaders!=null)
+		{
 			@foreach (var item in documentHeaders.Headers)
 			{
 				<div class="pe-2 flex-shrink-0">
-					<a style="" class="hoverable cell d-flex flex-column p-3" id=@($"d{item.DocumentId}") href=@($"/view/document/{item.DocumentId}")>
-						<div class="text-truncate text-center mb-2" style="width:0; min-width:100%;">@item.DocumentName</div>
-						<img class="imgPicture mx-auto" src="data:image/webp;base64, @Convert.ToBase64String(item.ImgPreview)" />
-
+					<a style="" class="anostyle hoverable cell d-flex flex-column p-3" id=@($"d{item.DocumentId}") href=@($"/view/document/{item.DocumentId}")>
+						<div class="text-truncate text-center mb-2" style="width:0; min-width:100%;">
+							@if (item.Approved == 0)
+							{
+								<i class="bi bi-lock"></i>
+							}
+							@item.DocumentName
+						</div>
+						<img class="imgPicture mx-auto mb-2" src="data:image/webp;base64, @Convert.ToBase64String(item.ImgPreview)" />
+						<div class="d-flex gap-1" style="width:0; min-width:100%;">
+							<span class="d-block">by</span>
+							<b class="d-block me-auto text-truncate">
+								@item.OwnerUserName
+							</b>
+							<i class="d-block">
+								@item.CreatedDate.ToShortDateString()
+							</i>
+						</div>
 					</a>
 				</div>
 			}
+		}
 		</div>
 	</div>
-
-}
+</section>
 
 <style>
 	.imgPicture
@@ -48,24 +99,38 @@
 </style>
 
 @code{
-	private DocumentModele.PreviewDocumentHeaders? documentHeaders;
+	private DocumentModels.PreviewDocumentHeaders? documentHeaders;
 	private bool loading = false;
 	private bool scrollToLastElement = false;
+	private bool initedTxtType = false;
+	private IEnumerable<string> chapters;
+	private Modal? modal;
+
 
 	protected override async Task OnInitializedAsync()
 	{
 		loading = true;
-		documentHeaders = Bson.FromBson<DocumentModele.PreviewDocumentHeaders>(await Http.GetByteArrayAsync("Preview/lastDocuments/all/10"));
+		var subjectsChapters = await Http.GetFromJsonAsync<SubjectsChapters>("documents/getsubjectschapters");
+		chapters = subjectsChapters.chapters.SelectMany(x => x.Value.Select(x => x.name)).Shuffle(new Random());
+		documentHeaders = Bson.FromBson<DocumentModels.PreviewDocumentHeaders>(await Http.GetByteArrayAsync("Preview/lastDocuments/all/10"));
 		loading = false;
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
+
+		if (chapters != null && !initedTxtType)
+		{
+			initedTxtType = true;
+			await JSRuntime.InvokeVoidAsync("initTxtType");
+		}
+
 		if (!scrollToLastElement && _Session.lastDocumentViewer != null &&
-			documentHeaders?.Headers.FirstOrDefault(x => x.DocumentId == _Session.lastDocumentViewer) != null)
+	documentHeaders?.Headers.FirstOrDefault(x => x.DocumentId == _Session.lastDocumentViewer) != null)
 		{
 			await JSRuntime.InvokeVoidAsync("scrollToElement", $"d{_Session.lastDocumentViewer}");
 			scrollToLastElement = true;
+			_Session.lastDocumentViewer = null;
 		}
 	}
 

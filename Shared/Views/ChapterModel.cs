@@ -11,8 +11,9 @@ namespace DocsWASM.Shared.Views
         public uint Id { get; set; }
         public string Name { get; set; }
         public string Subject { get; set; }
+        public uint SubjectId { get; set; }
         public string? Description { get; set; }
         public ulong Count { get; set; }
-		public List<PathModel> Paths { get; set; }
+		public List<PathModels> Paths { get; set; }
 	}
 }

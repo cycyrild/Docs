@@ -13,7 +13,7 @@
 }
 
 body {
-    background: linear-gradient(0deg, rgba(55,90,133,1) 0%, rgba(255,255,255,0) 35%, rgba(248,249,250,1) 95%, rgba(248,249,250,1) 100%) no-repeat, url(/img/pattern.png) repeat;
+    background: linear-gradient(0deg, rgb(55 90 133 / 50%) 0%, rgba(255,255,255,0) 35%, rgba(248,249,250,1) 95%, rgba(248,249,250,1) 100%) no-repeat, url(/img/pattern.png) repeat;
     background-attachment: fixed;
     padding-top: 4.5rem;
     z-index: -10;
@@ -69,7 +69,10 @@ h1:focus {
     content: var(--blazor-load-percentage-text, "Loading");
 }
 
-a, a:hover, a:focus, a:active {
+.anostyle,
+.anostyle:hover,
+.anostyle:focus,
+.anostyle:active {
     text-decoration: none;
     color: inherit;
 }
@@ -86,9 +89,32 @@ a, a:hover, a:focus, a:active {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.bg-blur {
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+
+.featured {
+    background-color: #5e5e5e1a;
+    padding: 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.ahover {
+    color:inherit;
+    text-decoration: none;
+}
+
+.ahover:hover {
+    color: inherit;
+    text-decoration: underline;
+}

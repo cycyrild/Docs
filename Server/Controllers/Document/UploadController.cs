@@ -64,7 +64,8 @@ namespace DocsWASM.Server.Controllers.Document
 						docType,
 						yearGroup,
 						school,
-						chapterId
+						chapterId,
+                        approved
 					) values (
 						@name,
 						@description,
@@ -74,7 +75,8 @@ namespace DocsWASM.Server.Controllers.Document
 						@docType,
 						@yearGroup,
 						@school,
-						@chapterId
+						@chapterId,
+                        @approved
 					);
 					SELECT LAST_INSERT_ID();";
                 cmd.Parameters.AddWithValue("@name", form.Name);
@@ -86,6 +88,7 @@ namespace DocsWASM.Server.Controllers.Document
                 cmd.Parameters.AddWithValue("@yearGroup", form.YearGroupName);
                 cmd.Parameters.AddWithValue("@school", form.SchoolName);
                 cmd.Parameters.AddWithValue("@chapterId", form.ChapterId);
+                cmd.Parameters.AddWithValue("@approved", 0);
                 using (var reader = await cmd.ExecuteReaderAsync())
                     while (await reader.ReadAsync())
                         docId = (ulong)reader.GetValue(0);

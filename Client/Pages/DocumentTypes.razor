@@ -5,21 +5,22 @@
 @using System.Collections.Specialized;
 @page "/view/documenttypes"
 
-<h1 class="display-3" tabindex="-1">Document types</h1>
-
 <DocsWASM.Client.Pages.Views.Breadcrumb
 school="@school"
 yearGroup="@yearGroup"
 subject="@subjectId"
-chapter="@chapterId" />
+chapter="@chapterId"
+currentView="PathModels.paths.docTypes" />
+
+<h1 class="display-3" tabindex="-1">Document types</h1>
 
 
 @if (documentTypes != null)
 {
-	<div class="d-flex flex-row gap-3">
+	<div class="d-flex flex-column gap-3">
 		@foreach (var item in documentTypes)
 		{
-			<a class="hoverable py-2 px-3 flex-nowrap d-flex align-items-center w-100"
+			<a class="anostyle hoverable py-2 px-3 flex-nowrap d-flex align-items-center w-100"
 			href="/view/documents?school=@school&yeargroup=@yearGroup&subjectid=@subjectId&chapterid=@chapterId&doctypeid=@item.Id">
 				<div class="col-6">
 					<b class="d-block text-truncate">

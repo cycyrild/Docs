@@ -1,21 +1,44 @@
-﻿@inject HttpClient Http
-@using static DocsWASM.Shared.PathModel;
+﻿	@inject HttpClient Http
+@using static DocsWASM.Shared.PathModels;
 
 <nav aria-label="breadcrumb">
 	<ol class="breadcrumb">
 		@{
-			var values = Enum.GetValues(typeof(paths)).Cast<paths>().ToList();
-			for(int i = 0; i<values.Count; i++)
+			if(school != null)
 			{
-				var index = i;
-				var currenVal = values[index];
-				if (currenVal == currentView)
-					break;
-				var currentPath = path[currenVal];
-
-				<li class="breadcrumb-item @((index == values.Count?"active":""))"><a href="#">@((currentPath != null ? currentPath : "*"))</a></li>
-
+				<li class="breadcrumb-item">
+					<span class="badge bg-secondary">school</span> @school
+				</li>
 			}
+
+			if(yearGroup != null)
+			{
+				<li class="breadcrumb-item">
+					<span class="badge bg-secondary">yearGroup</span> @yearGroup
+				</li>
+			}
+
+			if(subject != null)
+			{
+				<li class="breadcrumb-item">
+					<span class="badge bg-secondary">subject id</span> @subject
+				</li>
+			}
+
+			if(chapter != null)
+			{
+				<li class="breadcrumb-item">
+					<span class="badge bg-secondary">chapter id</span> @chapter
+				</li>
+			}
+
+			if(docType != null)
+			{
+				<li class="breadcrumb-item">
+					<span class="badge bg-secondary">docType id</span> @docType
+				</li>
+			}
+
 		}
 	</ol>
 </nav>
@@ -38,35 +61,6 @@
 	public string? docType { get; set; }
 
 	[Parameter]
-	public string? documents { get; set; }
-
-	[Parameter]
 	public paths currentView {get;set;}
-
-	private Dictionary<paths, string?> path = new ();
-
-	string? ConvertToNullIfEmpty(string? strg)
-	{
-		if (strg == "")
-			return null;
-		return strg;
-	}
-
-	protected override async Task OnInitializedAsync()
-	{
-		/*var _yearsGroups = await Http.GetFromJsonAsync<string[]>("documents/getyearsgroups");
-		var _docTypes = await Http.GetFromJsonAsync<Dictionary<byte, string>>("documents/getdoctypes");
-		var _schools = await Http.GetFromJsonAsync<string[]>("documents/getschools");
-		var _chapters = await Http.GetFromJsonAsync<Dictionary<uint, string>>("documents/getchapters");
-		var _subjects = await Http.GetFromJsonAsync<Dictionary<uint, string>>("documents/getsubjects");*/
-		
-		path.Add(paths.schools, ConvertToNullIfEmpty(school));
-		path.Add(paths.yearGroups, ConvertToNullIfEmpty(yearGroup));
-
-		path.Add(paths.subjects, ConvertToNullIfEmpty(subject));
-		path.Add(paths.chapters, ConvertToNullIfEmpty(chapter));
-		path.Add(paths.docTypes, ConvertToNullIfEmpty(docType));
-		path.Add(paths.documents, ConvertToNullIfEmpty(documents));
-	}
 
 }

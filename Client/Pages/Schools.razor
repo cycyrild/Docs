@@ -2,17 +2,18 @@
 @using DocsWASM.Shared.Views;
 @inject HttpClient Http
 
+<DocsWASM.Client.Pages.Views.Breadcrumb
+currentView="DocsWASM.Shared.PathModels.paths.schools" />
 
 
 <h1 class="display-3" tabindex="-1">Schools</h1>
-<DocsWASM.Client.Pages.Views.Breadcrumb />
 
 @if (schools != null)
 {
 		<div class="d-flex flex-row gap-3">
 		@foreach (var item in schools)
 		{
-			<a class="hoverable py-2 flex-nowrap d-flex align-items-center px-3 w-100" href="/view/yeargroups?school=@item.Name">
+			<a class="hoverable anostyle py-2 flex-nowrap d-flex align-items-center px-3 w-100" href="/view/yeargroups?school=@item.Name">
 				<div class="col-2">
 					<div class="d-flex" style="height: 23px;width: 46px;">
 						@((MarkupString)item.SvgLogo)

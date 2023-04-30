@@ -25,23 +25,27 @@ namespace DocsWASM.Server.Controllers.Document
 		{
 			await Db.Connection.OpenAsync();
 
-			DocumentModele.PreviewDocumentHeaders documents = new();
+			DocumentModels.PreviewDocumentHeaders documents = new();
 			MySqlCommand cmd;
 			cmd = Db.Connection.CreateCommand();
 			cmd.CommandText = @"
 			select
-			id,
-			name,
-			description,
-			subjectId,
-			ownerUserId,
-			imgPreview,
-			docType,
-			yearGroup,
-			school,
-			chapterId
+			documents.id,
+			documents.name,
+			documents.description,
+			documents.subjectId,
+			documents.ownerUserId,
+			login.userName,
+			documents.imgPreview,
+			documents.docType,
+			documents.yearGroup,
+			documents.school,
+			documents.chapterId,
+			documents.createdDate,
+			documents.approved
 			from documents
-			ORDER BY createdDate DESC
+			inner join login on documents.ownerUserId = login.id
+			ORDER BY documents.createdDate DESC
 			limit @limit";
 			cmd.Parameters.AddWithValue("@limit", limit);
 			documents.Headers = new();
@@ -54,11 +58,14 @@ namespace DocsWASM.Server.Controllers.Document
 						Description = reader[2] != System.DBNull.Value ? (string)reader[2] : "",
 						SubjectType = (uint)reader[3],
 						OwnerUserId = (uint)reader[4],
-						ImgPreview = (byte[])reader[5],
-						DocType = (Byte)reader[6],
-						YearGroup = (string)reader[7],
-						SchoolName = (string)reader[8],
-						ChapterId = (uint)reader[9],
+						OwnerUserName = (string)reader[5],
+						ImgPreview = (byte[])reader[6],
+						DocType = (byte)reader[7],
+						YearGroup = (string)reader[8],
+						SchoolName = (string)reader[9],
+						ChapterId = (uint)reader[10],
+						CreatedDate= (DateTime)reader[11],
+						Approved = (byte)reader[12],
 					});
 			return File(Bson.ToBson(documents), "application/octet-stream");
 		}

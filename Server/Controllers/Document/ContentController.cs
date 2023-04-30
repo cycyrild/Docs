@@ -6,13 +6,12 @@ using DocsWASM.Shared;
 using DocsWASM.Shared.Helpers;
 using DocsWASM.Client.Pages;
 using MySql.Data.MySqlClient;
-using static DocsWASM.Shared.PathModel;
-using Path = DocsWASM.Shared.PathModel.Path;
+using static DocsWASM.Shared.PathModels;
+using Path = DocsWASM.Shared.PathModels.Path;
 
 namespace DocsWASM.Server.Controllers.Document
 {
 	[Route("api/[controller]")]
-	[Authorize]
 	[ApiController]
 	public class ContentController : ControllerBase
 	{
@@ -40,13 +39,14 @@ namespace DocsWASM.Server.Controllers.Document
 			cmd.Parameters.AddWithValue("@offset", offset);
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
-					list.Add(new()
-					{
-						Name = (string)reader[0],
-						Description = reader[1] != System.DBNull.Value ? (string)reader[1] : null,
-						SvgLogo = reader[2] != System.DBNull.Value ? (string)reader[2] : null,
-						DocumentCount = (ulong)reader[3]
-					});
+					if(reader[0]!=System.DBNull.Value)
+						list.Add(new()
+						{
+							Name = (string)reader[0],
+							Description = reader[1] != System.DBNull.Value ? (string)reader[1] : null,
+							SvgLogo = reader[2] != System.DBNull.Value ? (string)reader[2] : null,
+							DocumentCount = (ulong)reader[3]
+						});
 			return list;
 		}
 
@@ -57,7 +57,7 @@ namespace DocsWASM.Server.Controllers.Document
 			int offset = (page == null || limit == null ? -1 : limit.Value * page.Value);
 			await Db.Connection.OpenAsync();
 			var cmd = Db.Connection.CreateCommand();
-			cmd.CommandText = $@"select school, yearGroup, description from yearGroups {(school != null ? "where school = @school" : "")}
+			cmd.CommandText = $@"select school, yearGroup, description from yeargroups {(school != null ? "where school = @school" : "")}
                                 {(page == null || limit == null ? "" : "LIMIT @limit OFFSET @offset")}";
 			if (school != null) cmd.Parameters.AddWithValue("@school", school);
 			cmd.Parameters.AddWithValue("@limit", limit);
@@ -97,13 +97,14 @@ namespace DocsWASM.Server.Controllers.Document
 								subjects.name,
 								svgLogo,
 								cast(count(a.subjectId) as UNSIGNED) as count 
-						FROM subjects
-						LEFT JOIN (
-								select subjectId, school, yearGroup from documents {(conditions.Count > 0 ? $"where {String.Join(" and ", conditions)}" : "")}
-							) AS a
-						on subjects.id = a.subjectId
-						GROUP BY subjects.id, subjects.name, subjects.svgLogo
-						{(page == null || limit == null ? "" : "LIMIT @limit OFFSET @offset")};";
+								FROM subjects
+								LEFT JOIN (
+										select subjectId, school, yearGroup from documents {(conditions.Count > 0 ? $"where {String.Join(" and ", conditions)}" : "")}
+									) AS a
+								on subjects.id = a.subjectId
+								GROUP BY subjects.id, subjects.name, subjects.svgLogo
+								order by count desc
+								{(page == null || limit == null ? "" : "LIMIT @limit OFFSET @offset")};";
 
 			cmd.Parameters.AddWithValue("@limit", limit);
 			cmd.Parameters.AddWithValue("@offset", offset);
@@ -140,15 +141,15 @@ namespace DocsWASM.Server.Controllers.Document
 				cmd.Parameters.AddWithValue("@yearGroup", yearGroup);
 			}
 			if (subjectId != null)
-			{
-				conditions.Add("documents.subjectId = @subjectId");
 				cmd.Parameters.AddWithValue("@subjectId", subjectId);
-			}
 
-			cmd.CommandText = @$"select chapters.id, chapterName, subjects.name, chapterDescription, cast(count(chapters.id) as UNSIGNED) as count from chapters
-                                inner join documents on documents.chapterId = chapters.id
-                                inner join subjects on documents.subjectId = subjects.id
-                                {(conditions.Count > 0 ? $"where {String.Join(" and ", conditions)}" : "")}
+			cmd.CommandText = @$"SELECT chapters.id, chapterName, subjects.name, chapters.subjectId, chapterDescription, CAST(COUNT(documents.id) AS UNSIGNED INT) AS count
+								FROM chapters
+								LEFT JOIN documents ON documents.chapterId = chapters.id {(conditions.Count > 0 ? $"and {String.Join(" and ", conditions)}" : "")}
+								LEFT JOIN subjects ON chapters.subjectId = subjects.id
+								{(subjectId != null ? "where chapters.subjectId = @subjectId" : "")}
+								GROUP BY chapters.id, subjects.name
+								order by count desc
                                 {(page == null || limit == null ? "" : "LIMIT @limit OFFSET @offset")}";
 
 			cmd.Parameters.AddWithValue("@limit", limit);
@@ -156,14 +157,14 @@ namespace DocsWASM.Server.Controllers.Document
 
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
-					if ((ulong)reader[4] > 0)
 						list.Add(new()
 						{
 							Id = (uint)reader[0],
 							Name = (string)reader[1],
 							Subject = (string)reader[2],
-							Description = reader[3] != System.DBNull.Value ? (string)reader[3] : null,
-							Count = (ulong)reader[4]
+							SubjectId = (uint)reader[3],
+							Description = reader[4] != System.DBNull.Value ? (string)reader[4] : null,
+							Count = (ulong)reader[5]
 						});
 			return list;
 		}
@@ -198,10 +199,13 @@ namespace DocsWASM.Server.Controllers.Document
 				cmd.Parameters.AddWithValue("@chapterId", chapterId);
 			}
 
-			cmd.CommandText = @$"select docType, doctypes.name, cast(count(documents.docType) as UNSIGNED) as count from documents
-                                inner join doctypes on documents.docType = doctypes.id
-                                inner join chapters on documents.chapterId = chapters.id
+			cmd.CommandText = @$"SELECT doctypes.id AS docTypeId, doctypes.name, COALESCE(COUNT(documents.docType), 0) AS count
+								FROM doctypes
+								LEFT JOIN documents ON doctypes.id = documents.docType
+								LEFT JOIN chapters ON documents.chapterId = chapters.id
 								{(conditions.Count > 0 ? $"where {String.Join(" and ", conditions)}" : "")}
+								GROUP BY doctypes.id;
+
                                 {(page == null || limit == null ? "" : "LIMIT @limit OFFSET @offset")}";
 
 			cmd.Parameters.AddWithValue("@limit", limit);
@@ -209,12 +213,11 @@ namespace DocsWASM.Server.Controllers.Document
 
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
-					if ((ulong)reader[2] > 0)
 						list.Add(new()
 						{
 							Id = (Byte)reader[0],
 							Name = (string)reader[1],
-							Count = (ulong)reader[2]
+							Count = (ulong)((long)reader[2])
 						});
 			return list;
 		}
@@ -268,7 +271,9 @@ namespace DocsWASM.Server.Controllers.Document
 									documents.chapterId,
 									chapterName,
 									documents.createdDate,
-									GROUP_CONCAT(pages.id SEPARATOR ',')
+									GROUP_CONCAT(pages.id SEPARATOR ','),
+									documents.imgPreview,
+									approved
 								FROM documents
 								JOIN pages ON documents.id = pages.documentId
 								inner join chapters on documents.chapterId = chapters.id
@@ -302,6 +307,8 @@ namespace DocsWASM.Server.Controllers.Document
 						ChapterName = (string)reader[12],
 						CreatedDate = (DateTime)reader[13],
 						Pages = ((string)reader[14]).Split(',').Select(x => uint.Parse(x)),
+						ImgPreview = (byte[])reader[15],
+						Approved = (byte)reader[16]
 					});
 
 			return File(Bson.ToBson(documents), "application/octet-stream");
@@ -320,14 +327,14 @@ namespace DocsWASM.Server.Controllers.Document
 			cmd.Parameters.AddWithValue("@id", subjectId);
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
-					list.Add(new PathModel.Path((string)reader[0], paths.subjects));
+					list.Add(new PathModels.Path((string)reader[0], paths.subjects));
 
 			cmd = conn.CreateCommand();
 			cmd.CommandText = "select chapterName from chapters where id = @id limit 1";
 			cmd.Parameters.AddWithValue("@id", chapterId);
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
-					list.Add(new PathModel.Path((string)reader[0], paths.chapters));
+					list.Add(new PathModels.Path((string)reader[0], paths.chapters));
 
 			return list;
 		}

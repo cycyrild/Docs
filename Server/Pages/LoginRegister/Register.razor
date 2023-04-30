@@ -4,76 +4,117 @@
 @using Microsoft.AspNetCore.Components.Rendering;
 @using Microsoft.AspNetCore.Components.Forms;
 @using Microsoft.AspNetCore.Components.Web;
-@namespace DocsWASM.Pages.LoginRegister
-<EditForm Model="@model" OnValidSubmit="toRegister">
-    <DataAnnotationsValidator />
-    <div class="mb-3">
-        <label for="InputEmail" class="h6 form-label">Email address</label>
-        <InputText id="InputEmail" class="form-control" @bind-Value="model.Email" name="email" />
-        <ValidationMessage  For="() => model.Email"/>
-    </div>
-    <div class="mb-3">
-        <label for="InputFullName" class="h6 form-label">First name</label>
-        <InputText name="fname" id="InputFullName" class="form-control" @bind-Value="model.FirstName" />
-        <ValidationMessage For="() => model.FirstName" />
-    </div>
-    <div class="mb-3">
-        <label for="InputLastName" class="h6 form-label">Last name</label>
-        <InputText name="lname" id="InputLastName" class="form-control" @bind-Value="model.LastName" />
-        <ValidationMessage For="() => model.LastName" />
-    </div>
-    <div class="mb-3">
-        <input id="InputFullNameRadio" type="checkbox" class="h6 form-check-input" @bind="model.IsPrivateFullName" />
-        <label for="InputFullNameRadio" class="h6 form-label">
-            <i class="bi bi-lock"></i>
-            Public full name
-        </label>
-        <ValidationMessage For="() => model.IsPrivateFullName" />
-    </div>
-      <div class="mb-3">
-        <label for="InputName" class="h6 form-label">Username</label>
-        <InputText id="InputName" class="form-control" @bind-Value="model.Name" />
-        <ValidationMessage  For="() => model.Name" class="text-danger"/>
-    </div>
-    <div class="mb-3">
-        <label for="InputPassword" class="h6 form-label">Password</label>
-        <InputText id="InputPassword" type="password" class="form-control" @bind-Value="model.Password" name="password" />
-        <ValidationMessage For="() => model.Password"/>
-    </div>
-    <div class="mb-3">
-        <label for="InputConfirmPassword" class="h6 form-label">Password</label>
-        <InputText id="InputConfirmPassword" type="password" class="form-control" @bind-Value="model.ConfirmPassword" name="password" />
-        <ValidationMessage For="() => model.ConfirmPassword"/>  
-    </div>
-    <div class="row align-items-end g-0" style="gap:15px">
-    <div class="col">
-        <label for="CaptchaAnswer" class="h6 form-label">Captcha answer</label>
-        <input type="text" id="CaptchaAnswer" class="form-control" @bind="captchaEntered" />
-    </div>
-        <div class="col-auto">
-        <img class="flex-grow-1" src=@captchaImgB64 style="object-fit: none" />
-        <div class="btn btn-outline-dark" @onclick="(()=>Captcha.GenerateImage(out captchaImgB64, out captchaAnswer))">
-            <i class="bi bi-bootstrap-reboot"></i>
-        </div>
-        </div>
-    </div>
-    <div class="d-flex justify-content-evenly mt-4">
-        <a class="btn btn-secondary" style="width:125px" href="/login">
-            <i class="bi bi-arrow-left-short"></i>
-            Log in
-        </a>
-        <button type="submit" class="btn btn-success" style="width:125px">
-            <i class="bi bi-check"></i>
-            Register
-        </button>
-    </div>
-</EditForm>
-<br />
+@using DocsWASM.Server.Mailing;
+
 @if (registerReturn.HasValue && registerReturn.Value.success == true)
 {
     <div class="alert alert-success" role="alert">Successfully registered</div>
+    return;
 }
-else if (registerReturn.HasValue && registerReturn.Value.success == false)
+
+@if (verifyMailFormVisible)
+{
+    <label class="h6 form-label">Code send by mail</label>
+    <input class="form-control" @bind-value="verificationMailCodeEntered" />
+    <button class="form-control" @onclick="register">Validate</button>
+}
+else
+{
+    <EditForm Model="@model" OnValidSubmit="sendVerificationByMail">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label for="InputEmail" class="h6 form-label">Email address</label>
+            <InputText id="InputEmail" class="form-control" @bind-Value="model.Email" name="email" />
+            <ValidationMessage  For="() => model.Email"/>
+        </div>
+        <div class="mb-3">
+            <label for="InputFullName" class="h6 form-label">First name</label>
+            <InputText name="fname" id="InputFullName" class="form-control" @bind-Value="model.FirstName" />
+            <ValidationMessage For="() => model.FirstName" />
+        </div>
+        <div class="mb-3">
+            <label for="InputLastName" class="h6 form-label">Last name</label>
+            <InputText name="lname" id="InputLastName" class="form-control" @bind-Value="model.LastName" />
+            <ValidationMessage For="() => model.LastName" />
+        </div>
+        <div class="mb-3">
+            <InputCheckbox id="InputFullNameRadio" class="h6 form-check-input" @bind-Value="model.IsPrivateFullName" />
+            <label for="InputFullNameRadio" class="h6 form-label">
+                <i class="bi bi-lock"></i>
+                Public full name
+            </label>
+            <ValidationMessage For="() => model.IsPrivateFullName" />
+        </div>
+          <div class="mb-3">
+            <label for="InputName" class="h6 form-label">Username</label>
+            <InputText id="InputName" class="form-control" @bind-Value="model.Name" />
+            <ValidationMessage  For="() => model.Name" class="text-danger"/>
+        </div>
+        <div class="mb-3">
+            <label for="InputPassword" class="h6 form-label">Password</label>
+            <InputText id="InputPassword" type="password" class="form-control" @bind-Value="model.Password" name="password" />
+            <ValidationMessage For="() => model.Password"/>
+        </div>
+        <div class="mb-3">
+            <label for="InputConfirmPassword" class="h6 form-label">Password</label>
+            <InputText id="InputConfirmPassword" type="password" class="form-control" @bind-Value="model.ConfirmPassword" name="password" />
+            <ValidationMessage For="() => model.ConfirmPassword"/>  
+        </div>
+        <div class="mb-3">
+            <label for="InputUserType" class="h6 form-label">User type</label>
+            <InputSelect id="InputUserType" class="form-control" @bind-Value="model.UserType">
+                <option value="">Select ...</option>
+                @if (userTypes !=null )
+                {
+                    @foreach (var item in userTypes.Skip(1))
+                    {
+                        <option value="@item.Key">@item.Value.Item1</option>
+                    }
+                }
+
+            </InputSelect>
+            <ValidationMessage For="() => model.UserType"></ValidationMessage>
+        </div>
+        <div class="mb-3">
+            <label for="InputSchoolName" class="h6 form-label">School name</label>
+            <InputSelect id="InputSchoolName" class="form-control" @bind-Value="model.School">
+                <option value="">Select ...</option>
+                @if(schools!=null)
+                {
+                    @foreach (var item in schools)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                }
+            </InputSelect>
+            <ValidationMessage For="() => model.School"></ValidationMessage>
+        </div>
+        <div class="row align-items-end g-0" style="gap:15px">
+        <div class="col">
+            <label for="CaptchaAnswer" class="h6 form-label">Captcha answer</label>
+            <input type="text" id="CaptchaAnswer" class="form-control" @bind="captchaEntered" />
+        </div>
+            <div class="col-auto">
+            <img class="flex-grow-1" src=@captchaImgB64 style="object-fit: none" />
+            <div class="btn btn-outline-dark" @onclick="(()=>Captcha.GenerateImage(out captchaImgB64, out captchaAnswer))">
+                <i class="bi bi-bootstrap-reboot"></i>
+            </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-evenly mt-4">
+            <a class="btn btn-secondary" style="width:125px" href="/login">
+                <i class="bi bi-arrow-left-short"></i>
+                Log in
+            </a>
+            <button type="submit" class="btn btn-success" style="width:125px">
+                <i class="bi bi-check"></i>
+                Register
+            </button>
+        </div>
+    </EditForm>
+}
+<br />
+@if (registerReturn.HasValue && registerReturn.Value.success == false)
 {
     <div class="alert alert-danger" role="alert">@registerReturn.Value.message</div>
 }
@@ -83,6 +124,13 @@ else if (registerReturn.HasValue && registerReturn.Value.success == false)
     private RegisterForm model = new RegisterForm();
     private string captchaImgB64;
     private RegisterResult? registerReturn;
+    private IEnumerable<string> schools;
+
+    private bool verifyMailFormVisible = false;
+    private string verificationMailCodeAnswer;
+    private string verificationMailCodeEntered;
+
+    private Dictionary<byte, (string, string)> userTypes;
 
     [Parameter]
     public string ipAdress { get; set; }
@@ -90,23 +138,50 @@ else if (registerReturn.HasValue && registerReturn.Value.success == false)
     [Parameter]
     public string userAgent { get; set; }
 
-
     private LoginRegisterSQL loginRegisterSQL = new LoginRegisterSQL();
-    protected override void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
+        userTypes = await loginRegisterSQL.GetUserTypes();
         Captcha.GenerateImage(out captchaImgB64, out captchaAnswer);
+        schools = await loginRegisterSQL.GetSchools();
         base.OnInitialized();
     }
 
-    private async Task toRegister()
+    private async Task register()
     {
-        if (checkCaptcha())
-            registerReturn = await loginRegisterSQL.RegisterUser(model.Email, model.FirstName, model.LastName, model.IsPrivateFullName, model.Password, model.Name, ipAdress);
+        if(verificationMailCodeAnswer == verificationMailCodeEntered)
+        {
+            registerReturn =
+                await loginRegisterSQL.RegisterUser(model.Email, model.FirstName, model.LastName, model.IsPrivateFullName, model.Password, model.Name, ipAdress, byte.Parse(model.UserType), model.School);
+            if (registerReturn.HasValue && registerReturn.Value.success == true)
+                verifyMailFormVisible = false;
+        }
+        else
+            registerReturn = new RegisterResult() { message = "Incorrect code", success = false };
+    }
+
+    private async Task sendVerificationByMail()
+    {
+        var byteUserType = byte.Parse(model.UserType);
+
+        if (!await loginRegisterSQL.VerifyPermissionCorrectEmail(model.Email, byteUserType, model.School))
+            registerReturn = new RegisterResult() { message = $@"Please use an appropriate email ""{model.School}"" address to create an account with the status ""{userTypes[byteUserType].Item1}"".", success = false };
+        else if (checkCaptcha())
+        {
+            var check = await loginRegisterSQL.CheckBeforeSendMail(model.Email, model.FirstName, model.LastName, model.IsPrivateFullName, model.Password, model.Name, ipAdress, byteUserType, model.School);
+            if (check == null)
+            {
+                verifyMailFormVisible = true;
+                var accountVerif = new AccountVerification(new Random());
+                verificationMailCodeAnswer = await accountVerif.GenerateAndSend(model.Email);
+                registerReturn = null;
+            }
+            else
+                registerReturn = check;
+        }
         else
             registerReturn = new RegisterResult() { message = "Incorrect captcha", success = false };
-
-        if(registerReturn.Value.success)
-            model = new RegisterForm();
     }
 
     private bool checkCaptcha()

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DocsWASM.Shared
 {
-	public class PathModel
+	public class PathModels
 	{
 
 		public class Path

@@ -1,64 +1,90 @@
 ﻿@page "/view/documents"
 @using DocsWASM.Shared;
 @using DocsWASM.Shared.Helpers;
+@using DocsWASM.Client.AppState;
 @using DocsWASM.Shared.Views;
 @using System.Collections.Specialized;
 @inject HttpClient Http
+@inject Session _Session
+@inject IJSRuntime JS
+@using DocsWASM.Client.SharedComponent;
 
-<h1 class="display-3" tabindex="-1">Documents</h1>
 <DocsWASM.Client.Pages.Views.Breadcrumb school="@school"
 yearGroup="@yearGroup"
 subject="@subjectId"
 chapter="@chapterId"
-docType="@docTypeId"/>
+docType="@docTypeId"
+currentView="PathModels.paths.documents" />
+<LoadingComponent loading="loading">
+</LoadingComponent>
+
+<h1 class="display-3" tabindex="-1">Documents</h1>
 
 @if (documentTypes != null)
 {
-		<div class="d-flex flex-column gap-3">
-			@foreach (var item in documentTypes.Headers)
-			{
-			<a class="hoverable flex-nowrap d-flex align-items-center gap-3" href="/view/document/@item.DocumentId">
-					<div class="col-2">
-						<img class="imgPicture mx-auto my-2" src="data:image/webp;base64, @Convert.ToBase64String(item.ImgPreview)" />
-					</div>
-					<div class="col" style="min-width:0">
-						<div class="d-flex flex-column">
-							<b class="text-truncate">
+	<div class="d-flex flex-column gap-3">
+		@foreach (var item in documentTypes.Headers)
+		{
+			<div class="featured flex-nowrap d-flex align-items-center gap-3 p-1" id=@($"d{item.DocumentId}")>
+			<a class="col-2 px-2" href="/view/document/@item.DocumentId">
+				<img class="imgPicture mx-auto my-2" src="data:image/webp;base64, @Convert.ToBase64String(item.ImgPreview)" />
+			</a>
+			<div class="col" style="min-width:0">
+				<div class="d-flex flex-column">
+						<div class="text-truncate">
+						@if (item.Approved == 0)
+						{
+							<i class="bi bi-lock"></i>
+						}
+						<a class="ahover" href="/view/document/@item.DocumentId">
+							<b>
 								@item.DocumentName
 							</b>
-							<div class="text-truncate">
-								@item.SchoolName
-							</div>
-							<div class="text-truncate">
-								@item.OwnerUserName
-							</div>
-						</div>
+						</a>
 					</div>
-					<div class="col-2 d-none d-md-block">
-						<div class="d-flex flex-column">
-							<div class="text-truncate">
-								@item.SubjectTypeName
-							</div>
-						<div class="text-truncate text-muted">
-								@item.ChapterName
-							</div>
-						</div>
+					<div class="text-truncate">
+						<a class="ahover" href="/view/documents?school=@item.SchoolName">
+							@item.SchoolName
+						</a>
 					</div>
-					<div class="col-2 d-none d-lg-block">
-						<div class="text-truncate">
-							@item.CreatedDate.ToString("d")
-						</div>
+					<div class="text-truncate">
+						@item.OwnerUserName
 					</div>
-					<div class="col-2">
-					<div class="text-nowrap text-center">
-							@item.Pages.Count()
-							<i class="bi bi-file-earmark"></i>
-						</div>
+				</div>
+			</div>
+			<div class="col-2 d-none d-md-block">
+				<div class="d-flex flex-column">
+					<div class="text-truncate">
+						<a class="ahover" href="/view/documents?subjectid=@item.SubjectType">
+							@item.SubjectTypeName
+						</a>
 					</div>
+					<div class="text-truncate">
+						<a class="ahover text-muted" href="/view/documents?chapterid=@item.ChapterId">
+							@item.ChapterName
+						</a>
+					</div>
+				</div>
+			</div>
+				<div class="col-1 d-none d-lg-block">
+				<div class="text-truncate">
+					@item.CreatedDate.ToString("d")
+				</div>
+			</div>
+			<div class="col-2">
+				<a class="ahover d-block text-truncate" href="/view/documents?doctypeid=@item.DocType">
+					@item.DocTypeName
 				</a>
-			}
+			</div>
+			<div class="col-2">
+				<div class="text-nowrap text-center">
+					@item.Pages.Count()
+					<i class="bi bi-file-earmark"></i>
+				</div>
+			</div>
 		</div>
-
+		}
+	</div>
 }
 <style>
 	.imgPicture {
@@ -89,9 +115,24 @@ docType="@docTypeId"/>
 	public string? docTypeId { get; set; }
 
 	private DocumentsModel documentTypes;
+	private bool scrollToLastElement = false;
+
+	private bool loading = false;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!scrollToLastElement && _Session.lastDocumentViewer != null &&
+		documentTypes?.Headers.FirstOrDefault(x => x.DocumentId == _Session.lastDocumentViewer) != null)
+		{
+			await JS.InvokeVoidAsync("scrollToElement", $"d{_Session.lastDocumentViewer}");
+			scrollToLastElement = true;
+			_Session.lastDocumentViewer = null;
+		}
+	}
 
 	protected override async Task OnParametersSetAsync()
 	{
+		loading = true;
 		var query = new NameValueCollection();
 		if (school != null) query["school"] = school;
 		if (yearGroup != null) query["yeargroup"] = yearGroup;
@@ -101,6 +142,7 @@ docType="@docTypeId"/>
 		var queryStrg = $"content/documents{UriHelper.ToQueryString(query)}";
 
 		documentTypes = Bson.FromBson<DocumentsModel>(await Http.GetByteArrayAsync(queryStrg));
+		loading = false;
 	}
 }
 

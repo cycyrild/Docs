@@ -11,6 +11,6 @@ namespace DocsWASM.Shared.Views
 		public string School { get; set; }
 		public string Name { get; set; }
 		public string? Description { get; set; }
-		public List<PathModel> Paths { get; set; }
+		public List<PathModels> Paths { get; set; }
 	}
 }

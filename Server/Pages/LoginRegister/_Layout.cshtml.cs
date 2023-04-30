@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Docs.Pages.LoginRegister
+namespace DocsWASM.Pages.LoginRegister
 {
     public class _LayoutModel : PageModel
     {

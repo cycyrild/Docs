@@ -42,7 +42,7 @@ namespace DocsWASM.Client.AppState
 		{
 			zoomChangeFunc = async(e) => ChangeDocumentZoom(e, true);
 			drawTimer = new Timer(250);
-			drawTimer.Elapsed += ((e, f) => { shouldRender = true; RefreshZoomDocument.Invoke(); }) ;
+			drawTimer.Elapsed += ((e, f) => { shouldRender = true; RefreshZoomDocument?.Invoke(); }) ;
 			drawTimer.AutoReset = false;
 		}
 	}

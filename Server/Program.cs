@@ -56,6 +56,13 @@ namespace DocsWASM.Server
             return GetAppSettings()["ConnectionStrings:Default"];
         }
 
+        public static (string mail, string password) SmtCredentials()
+        {
+            var settings = GetAppSettings();
+            return (settings["SmtpCredential:Mail"], settings["Password"]);
+
+        }
+
         public static IConfigurationRoot GetAppSettings()
         {
             string applicationExeDirectory = ApplicationExeDirectory();

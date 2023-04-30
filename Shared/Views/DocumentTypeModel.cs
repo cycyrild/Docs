@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DocsWASM.Shared;
-using static DocsWASM.Shared.DocumentModele;
+using static DocsWASM.Shared.DocumentModels;
 
 namespace DocsWASM.Shared.Views
 {

@@ -7,7 +7,7 @@ using static DocsWASM.Shared.UploadModels;
 
 namespace DocsWASM.Shared
 {
-	public class DocumentModele
+	public class DocumentModels
 	{
 		public static Dictionary<dataBinTypesEnum, string> dataBinTypesMime = new Dictionary<dataBinTypesEnum, string>()
 		{
@@ -39,6 +39,7 @@ namespace DocsWASM.Shared
 			public string ChapterName { get; set; }
 			public DateTime CreatedDate { get; set; }
 			public IEnumerable<uint> Pages { get; set; }
+			public Byte Approved { get; set; }
 		}
 
 		public class Page

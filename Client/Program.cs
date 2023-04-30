@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using System.Net.Http.Headers;
 using DocsWASM.Client.AppState;
+using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 namespace DocsWASM.Client
 {
@@ -16,7 +17,10 @@ namespace DocsWASM.Client
             builder.Services.AddScoped<Actions>();
 			builder.Services.AddScoped<Session>();
 			builder.Services.AddScoped<DocumentZoom>();
-			builder.Services.AddScoped(sp =>
+            builder.Services.AddScoped<UserTypes>();
+            builder.Services.AddPWAUpdater();
+
+            builder.Services.AddScoped(sp =>
             {
                 var hc = new HttpClient(new HttpClientHandler {AllowAutoRedirect = false});
                 hc.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress + "api/");

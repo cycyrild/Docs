@@ -12,6 +12,6 @@ namespace DocsWASM.Shared.Views
 		public string? Description { get; set; }
 		public string? SvgLogo { get; set; }
 		public ulong DocumentCount { get; set; }
-		public List<PathModel> Paths { get; set; }
+		public List<PathModels> Paths { get; set; }
 	}
 }

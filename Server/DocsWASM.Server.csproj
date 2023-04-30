@@ -8,8 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.0" />
-    <PackageReference Include="MySql.Data" Version="8.0.31" />
+    <Compile Remove="Controllers\Admin - Copier\**" />
+    <Content Remove="Controllers\Admin - Copier\**" />
+    <EmbeddedResource Remove="Controllers\Admin - Copier\**" />
+    <None Remove="Controllers\Admin - Copier\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.2" />
+    <PackageReference Include="MySql.Data" Version="8.0.32" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.3" />
     <PackageReference Include="Svg.Skia" Version="0.5.18" />
   </ItemGroup>
 

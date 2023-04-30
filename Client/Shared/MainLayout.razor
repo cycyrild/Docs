@@ -1,10 +1,18 @@
 ﻿@using DocsWASM.Shared
 @inherits LayoutComponentBase
 @inject HttpClient Http
-@using DocsWASM.Client.AppState;
+@inject Actions _Actions
+@using DocsWASM.Client.AppState
+@using System.Web;
 @inject Actions _Actions
 @inject Session _Session
 @inject IJSRuntime JS
+@inject NavigationManager NavManager
+@inject UserTypes _UserTypes
+@using Toolbelt.Blazor.PWA.Updater
+
+<PWAUpdater Align="PWAUpdater.Aligns.Buttom" />
+
 <div class="fade modal" id="searchModal" tabindex="-1" aria-labelledby="searchModal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -13,30 +21,31 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="input-group mb-3">
-                    <button class="btn" type="button" id="button-addon1">
+                <form class="input-group mb-3" @onsubmit="Search">
+                    <button class="btn" type="submit" data-bs-dismiss="modal" id="button-addon1">
                         <i class="bi bi-search"></i>
                     </button>
-                    <input id="searchInput" type="text" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
-                </div>
+                    <input id="searchInput" type="text" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1" @bind-value="searchInput">
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<nav class="navbar fixed-top" style="backdrop-filter: blur(100px); -webkit-backdrop-filter: blur(100px);">
+<nav class="navbar fixed-top" style="backdrop-filter: blur(100px); -webkit-backdrop-filter: blur(100px)">
     <div class="container-fluid flex-nowrap justify-content-start" style="gap:10px">
         <a href="/" class="me-auto">
             <img src="/img/logo/docasLargeTransparency.png" style="height: 30px">
         </a>
+
         @*Large screeen*@
         <div class="flex-grow-1 d-none d-lg-block">
-            <div class="input-group">
-                <button class="btn btn-outline-secondary" type="button">
+            <form class="input-group" @onsubmit="Search">
+                <button class="btn btn-outline-secondary" type="submit">
                     <i class="bi bi-search"></i>
                 </button>
-                <input type="text" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
-            </div>
+                <input type="text" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1" @bind-value="searchInput">
+            </form>
         </div>
 
         <button class="d-block d-lg-none btn btn-secondary" data-bs-toggle="modal" data-bs-target="#searchModal">
@@ -45,13 +54,13 @@
 
         @if (_Session.user != null)
         {
-            <div class="d-none d-lg-block btn btn-secondary">
+            @*<div class="d-none d-lg-block btn btn-secondary">
                 <i class="bi bi-chat"></i>
-            </div>
+            </div>*@
 
-            <button class="btn btn-secondary" type="button">
+            @*<button class="btn btn-secondary" type="button">
                 <i class="bi bi-pin-angle"></i>
-            </button>
+            </button>*@
 
             <div class="dropstart">
                 <button type="button" class="btn btn-secondary" data-bs-toggle="dropdown" aria-expanded="false">
@@ -64,7 +73,7 @@
 
 
                 <ul class="dropdown-menu">
-                    <li>
+                    @*<li>
                         <a class="dropdown-item" href="#">
                             <i class="bi bi-file-earmark-person"></i>
                             Show my profile
@@ -72,19 +81,19 @@
                     </li>
                     <li>
                         <hr class="dropdown-divider">
-                    </li>
+                    </li>*@
                     <li>
                         <a class="dropdown-item" href="/logout">
                             <i class="bi bi-door-closed"></i>
                             Log out
                         </a>
                     </li>
-                    <li>
+                    @*<li>
                         <a class="dropdown-item" href="#">
                             <i class="bi bi-gear"></i>
                             Account setting
                         </a>
-                    </li>
+                    </li>*@
                 </ul>
             </div>
         }
@@ -123,33 +132,34 @@
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel" style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(5px); background: linear-gradient(rgb(248 249 250 / 88%) 45%, rgb(255 255 255 / 0%) 100%);">
     <div class="offcanvas-header">
         <h5 id="offcanvasRightLabel">
-            Docs
+            Doc's
         </h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
         <div class="d-flex flex-column">
-			@if (_Session.user != null)
-			{
+            @if (_Session.user != null && _UserTypes.UserTypeByteNameimgHTML != null)
+            {
                 <div class="py-2 px-1 text-decoration-none text-dark text-center">
                     <i class="bi bi-person d-block" style="font-size:35px"></i>
                 <span class="d-block">@_Session.user.FirstName <b>@_Session.user.LastName</b></span>
-                <span class="d-block">@Enum.GetName(_Session.user.TypeOfUser)</span>
+                <span class="d-block">@_UserTypes.UserTypeByteNameimgHTML[_Session.user.TypeOfUser].Name</span>
                     <span>Member since @_Session.user.CreatedDate</span>
                 </div>
+            
+                <hr class="my-2" />
+                <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/upload">
+                    <i class="bi bi-upload"></i>
+                    Share content
+                </a>
             }
-            <hr class="my-2" />
-            <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/upload">
-                <i class="bi bi-upload"></i>
-                Share content
-            </a>
-            <hr class="my-2" />
+            @*<hr class="my-2" />
             <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/">
                 <i class="bi bi-bookmarks"></i>
                 Library
-            </a>
+            </a>*@
             <hr class="my-2" />
-            <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/">
+            <a class="py-2 px-1 text-decoration-none text-dark" onclick="offCanvas.hide()" href="/members">
                 <i class="bi bi-people"></i>
                 Members
             </a>
@@ -162,13 +172,39 @@
     </div>
 </div>
 <div class="container-lg px-1">
+    @*@if (_UserTypes.UserTypeByteNameimgHTML!=null)
+    {
+        foreach (var item in _UserTypes.UserTypeByteNameimgHTML)
+        {
+            @item.Key
+            @item.Value.Item1
+            @item.Value.Item2
+        }
+    }*@
+
     @Body
 </div>
 @code
 {
+    private string searchInput = "";
+
+    protected override void OnInitialized()
+    {
+        _Actions.SearchInputNeedToBeClear += (() =>
+        {
+            searchInput = "";
+            StateHasChanged();
+        });
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender)
             await JS.InvokeVoidAsync("offCanvasInit", "offcanvasRight");
+    }
+
+    private void Search()
+    {
+        NavManager.NavigateTo($"/search?q={HttpUtility.UrlEncode(searchInput)}");
     }
 }

@@ -52,10 +52,10 @@
 				<div class="mb-3">
 					<label for="Input2" class="h6 form-label lead">Years group</label>
 					<InputSelect class="form-select" id="Input2" @bind-Value="model.YearGroupName">
-						@if (yearsGroups != null)
+						<option value="">Select ...</option>
+						@if (model.SchoolName != null && yearsGroups != null && yearsGroups.TryGetValue(model.SchoolName, out var strings))
 						{
-							<option value="">Select ...</option>
-							@foreach (var dept in yearsGroups)
+							@foreach (var dept in strings)
 							{
 								<option value="@dept">@dept</option>
 							}
@@ -83,9 +83,12 @@
 						@if (chapters != null)
 						{
 							<option value="">Select ...</option>
-							@foreach (var dept in chapters.Where(x => x.Key == model.SubjectId))
+							@if (model.SubjectId.HasValue && chapters.TryGetValue(model.SubjectId.Value, out var chaptersList))
 							{
-								<option value="@dept.Value.id">@dept.Value.name</option>
+								@foreach (var dept in chaptersList)
+								{
+									<option value="@dept.id">@dept.name</option>
+								}
 							}
 						}
 					</InputSelect>
@@ -126,7 +129,7 @@
 				</div>
 			}
 		</div>
-		<div class="col-sm-3">
+		<div class="col-sm-3" >
 			<div style="overflow: auto;overflow-x: hidden">
 				<div class="d-flex align-items-center flex-column p-2" style="gap:60px">
 					@if (parsedPages.Count > 0)
@@ -136,7 +139,7 @@
 							var index = i;
 							var item = parsedPages[index];
 							<div class="w-100">
-								<div class="accordion mb-2" id=@("a"+i)>
+								<div class="accordion mb-2" id=@("a" +i)>
 									<div class="accordion-item">
 										<h2 class="accordion-header">
 											<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@("b"+i)" aria-expanded="false">
@@ -146,7 +149,7 @@
 												</div>
 											</button>
 										</h2>
-										<div id="@("b"+i)" class="accordion-collapse collapse" data-bs-parent="#@("a"+i)">
+										<div id="@("b"+ i)" class="accordion-collapse collapse" data-bs-parent="#@("a"+i)">
 											<div class="accordion-body">
 												@item.paragraphsString
 											</div>
@@ -176,7 +179,7 @@
 									<button class="btn btn-sm btn-outline-dark d-block me-1" @onclick="(() => parsedPages.RemoveAt(index))">
 										<i class="bi bi-trash"></i>
 									</button>
-									<button class=@($"btn btn-sm btn-outline-dark d-block text-truncate {(item.isCorrection?"bg-success": "")} bg-gradient me-auto") @onclick="(()=>ChangeCorrectionState(index))">
+									<button class="btn btn-sm btn-outline-dark d-block text-truncate bg-gradient me-auto@(item.isCorrection?" bg-success text-light":"")" @onclick="(()=>ChangeCorrectionState(index))">
 										<i class="bi bi-check"></i>
 										Correction
 									</button>
@@ -221,15 +224,15 @@
 </style>
 @code {
 	private UploadModel model = new();
-	private string[] yearsGroups;
+	private Dictionary<string, string[]> yearsGroups;
 	private Dictionary<Byte, string> docTypes;
 	private string[] schools;
-	private Dictionary<uint, SubjectsChapters.chapter> chapters;
+	private Dictionary<uint, List<SubjectsChapters.chapter>> chapters;
 	private Dictionary<uint, string> subjects;
 	private bool isLoading = false;
 	private string? resultUpload = null;
 	private long maxFileSize = 1024 * 5000;
-	private int maxAllowedPages = 12;
+	private int maxAllowedPages = 30;
 	private string uploadErrorMsg = "";
 	private List<PageModel> parsedPages = new();
 
@@ -270,7 +273,7 @@
 		var subjectsChapters = await Http.GetFromJsonAsync<SubjectsChapters>("documents/getsubjectschapters");
 		chapters = subjectsChapters.chapters;
 		subjects = subjectsChapters.subjects;
-		yearsGroups = await Http.GetFromJsonAsync<string[]>("documents/getyearsgroups");
+		yearsGroups = await Http.GetFromJsonAsync<Dictionary<string, string[]>>("documents/getyearsgroups");
 		docTypes = await Http.GetFromJsonAsync<Dictionary<byte, string>>("documents/getdoctypes");
 		schools = await Http.GetFromJsonAsync<string[]>("documents/getschools");
 	}
@@ -281,7 +284,7 @@
 		isLoading = true;
 		try
 		{
-			List<(byte[] bin, string fileName)> toParse = new();
+			Queue<(byte[] bin, string fileName)> toParse = new();
 			uploadErrorMsg = "";
 			var files = e.GetMultipleFiles(maxAllowedPages - parsedPages.Count);
 			model.Name = Path.GetFileNameWithoutExtension(files[0].Name);
@@ -295,12 +298,13 @@
 				using (var fileStream = file.OpenReadStream(maxFileSize))
 				{
 					await fileStream.CopyToAsync(ms);
-					toParse.Add((ms.ToArray(), file.Name));
+					toParse.Enqueue((ms.ToArray(), file.Name));
 				}
 			}
 
-			foreach (var item in toParse)
+			while(toParse.Count>0)
 			{
+				var item = toParse.Dequeue();
 				var documentParser = new DocumentParser(JS);
 				var parsedObj = await documentParser.Parser(item.bin, item.fileName);
 				foreach (var subItem in parsedObj)

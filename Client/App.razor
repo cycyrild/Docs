@@ -2,6 +2,9 @@
 @inject HttpClient Http
 @using DocsWASM.Shared
 @inject Session _Session
+@inject UserTypes _UserTypes
+@using static DocsWASM.Shared.TypeOfUsersModels;
+
 @using Microsoft.AspNetCore.Components;
 @using System.Text.Json;
 <Router AppAssembly="@typeof(App).Assembly">
@@ -20,14 +23,14 @@
 @code{
     protected override async Task OnParametersSetAsync()
     {
-        var result = await Http.GetAsync("Account/my");
-        if (result.IsSuccessStatusCode)
+        var user = await Http.GetFromJsonAsync<AccountModels.User>("account/my");
+        if (user.Authentified)
         {
-            var strg = await result.Content.ReadAsStringAsync();
-            JsonSerializerOptions options = new(JsonSerializerDefaults.Web);
-            var obj = JsonSerializer.Deserialize<AccountModels.User>(strg, options);
-            _Session.user = obj;
+            _Session.user = user;
         }
+
+        _UserTypes.UserTypeByteNameimgHTML = await Http.GetFromJsonAsync<Dictionary<byte, TypeOfUsers>>("fetch/typeofusers");
+
     }
 }
 

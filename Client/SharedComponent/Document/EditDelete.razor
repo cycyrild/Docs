@@ -1,0 +1,80 @@
+﻿@using DocsWASM.Shared.Helpers;
+@using DocsWASM.Shared;
+@using static DocsWASM.Shared.DocumentModels;
+@using static DocsWASM.Shared.Helpers.Bson;
+
+<Modal @ref="modal" ModalTitle="Edit document">
+	<div class="modal-body">
+		<div class="mb-3">
+			<label for="InputName" class="h6 form-label lead">
+				Document name
+			</label>
+			<input
+				@bind-value="document.DocumentName"
+				type="text"
+				class="form-control valid"
+			/>
+		</div>
+		<div class="mb-3">
+			<label for="InputName" class="h6 form-label lead">
+				Document description
+			</label>
+			<input @bind-value="document.Description"
+				   type="text"
+				   class="form-control valid" />
+		</div>
+		<div class="mb-3">
+			<label for="InputName" class="h6 form-label lead">
+				Delete the document
+			</label>
+			<button type="button" class="btn btn-danger d-block" @onclick="(()=> DeleteDocument())">
+				Remove
+			</button>
+		</div>			
+		<div class="modal-footer">
+			<button type="button" class="btn btn-secondary" @onclick="(() => modal?.ModalClose())">Close</button>
+			<button type="button" class="btn btn-primary" @onclick="(() =>EditDocument())">Save changes</button>
+		</div>
+	</div>
+</Modal>
+
+@code {
+	[Parameter]
+	public DocumentHeader document { get; set; }
+
+	[Parameter]
+	public HttpClient httpClient { get; set; }
+
+	[Parameter]
+	public Action deleteEvent { get; set; }
+
+	[Parameter]
+	public Action editEvent { get; set; }
+
+
+	public Modal? modal { get; set; }
+
+	private bool isDeleted = false;
+
+
+	private async Task EditDocument()
+	{
+		var content = new ByteArrayContent(ToBson(document));
+		var result = await httpClient.PostAsync("documentedit/Edit/" + document.DocumentId, content);
+		if (result.IsSuccessStatusCode)
+		{
+			modal.ModalClose();
+			editEvent.Invoke();
+		}
+	}
+
+	private async Task DeleteDocument()
+	{
+		var result = await httpClient.DeleteAsync("documentedit/delete/" + document.DocumentId);
+		if (result.IsSuccessStatusCode)
+		{
+			modal.ModalClose();
+			deleteEvent.Invoke();
+		}
+	}
+}

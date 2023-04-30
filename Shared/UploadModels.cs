@@ -16,15 +16,12 @@ namespace DocsWASM.Shared
 			public string name { get; set; }
 		}
 		public Dictionary<uint, string> subjects { get; set; }
-		public Dictionary<uint, chapter> chapters { get; set; }
+		public Dictionary<uint, List<chapter>> chapters { get; set; }
 
 	}
 	public class UploadModels
 	{
 		public enum dataBinTypesEnum { pdf = 0, png = 1, jpg = 2, svg = 3, webp = 4 };
-
-
-
 
 		public static Dictionary<string, byte> dataBinTypes = new Dictionary<string, byte>()
 		{
@@ -35,8 +32,6 @@ namespace DocsWASM.Shared
 			{ ".jpeg", (byte)dataBinTypesEnum.jpg },
 			{ ".webp", (byte)dataBinTypesEnum.webp }
 		};
-
-
 
 		public class UploadSendModel
 		{
