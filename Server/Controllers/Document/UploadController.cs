@@ -45,8 +45,8 @@ namespace DocsWASM.Server.Controllers.Document
                 ms.Position = 0;
                 var uploadSend = FromBson<UploadSendModel>(ms.ToArray());
                 var userId = uint.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                /*try
-				{*/
+                try
+				{
                 var form = uploadSend.Upload;
                 var pageModels = uploadSend.Pages;
                 await Db.Connection.OpenAsync();
@@ -116,6 +116,8 @@ namespace DocsWASM.Server.Controllers.Document
 
                 for (int i = 0; i < pageModels.Count(); i++)
                 {
+                    var cleanSvg = XMLHelper.XMLHelper.Clean(Encoding.UTF8.GetString(pageModels[i].bin));
+
                     cmd.CommandText += $"(@pageNo{i}, @documentId{i}, @paragraphs{i}, @name{i}, @yearGroup{i}, @school{i}, @chapterId{i}, @docType{i}, @docBinType{i}, @subjectId{i}, @isCorrection{i}, @bin{i}, @placeHolder{i}){(i == pageModels.Count() - 1 ? ";" : ",")}\n";
                     cmd.Parameters.AddWithValue($"@pageNo{i}", i + 1);
                     cmd.Parameters.AddWithValue($"@documentId{i}", docId.Value);
@@ -128,16 +130,16 @@ namespace DocsWASM.Server.Controllers.Document
                     cmd.Parameters.AddWithValue($"@docBinType{i}", (byte)pageModels[i].fileType);
                     cmd.Parameters.AddWithValue($"@subjectId{i}", form.SubjectId);
                     cmd.Parameters.AddWithValue($"@isCorrection{i}", pageModels[i].isCorrection);
-                    cmd.Parameters.AddWithValue($"@bin{i}", pageModels[i].bin);
+                    cmd.Parameters.AddWithValue($"@bin{i}", Encoding.UTF8.GetBytes(cleanSvg));
 					cmd.Parameters.AddWithValue($"@placeHolder{i}", pageModels[i].fileType != dataBinTypesEnum.svg ? ImgToWebP(pageModels[i].bin, 75, 75) : SvgToWebP(pageModels[i].bin, 75, 75));
 				}
 				await cmd.ExecuteNonQueryAsync();
                 return new UploadStatus() { documenId = (uint)docId, success = true };
-                /*}
+                }
 				catch (Exception ex)
 				{
 					return new UploadStatus() { errorMessage = ex.Message, success = false };
-				}*/
+				}
             }
         }
 

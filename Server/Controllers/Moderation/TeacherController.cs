@@ -35,7 +35,7 @@ namespace DocsWASM.Server.Controllers.Admin
 
 		[HttpGet]
 		[Route("dashboard")]
-		public async Task<IActionResult> AdminDashboard()
+		public async Task<IActionResult> AdminDashboard(int? page, int? limit)
 		{
 			await Db.Connection.OpenAsync();
 			

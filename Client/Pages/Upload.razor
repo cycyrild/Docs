@@ -236,6 +236,8 @@
 	private string uploadErrorMsg = "";
 	private List<PageModel> parsedPages = new();
 
+
+
 	private void ChangeCorrectionState(int index)
 	{
 		parsedPages[index].isCorrection = !parsedPages[index].isCorrection;
@@ -269,7 +271,6 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		await JS.InvokeVoidAsync("loadMupdf");
 		var subjectsChapters = await Http.GetFromJsonAsync<SubjectsChapters>("documents/getsubjectschapters");
 		chapters = subjectsChapters.chapters;
 		subjects = subjectsChapters.subjects;
@@ -305,7 +306,7 @@
 			while(toParse.Count>0)
 			{
 				var item = toParse.Dequeue();
-				var documentParser = new DocumentParser(JS);
+				var documentParser = new DocumentParser();
 				var parsedObj = await documentParser.Parser(item.bin, item.fileName);
 				foreach (var subItem in parsedObj)
 				{
@@ -328,7 +329,6 @@
 
 	public async ValueTask DisposeAsync()
 	{
-		await JS.InvokeVoidAsync("disposeMupdf");
 	}
 
 }

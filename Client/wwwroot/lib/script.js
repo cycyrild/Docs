@@ -63,10 +63,10 @@ window.pinchZoomLoad = function pinchZoomLoad(_querySelector, _cssVar) {
     window.addEventListener('gestureend', gestureEnd, { passive: false })
 };
 
-window.loadMupdf = async function loadMupdf() {
-    var createMuPdf = require('mupdf-js');
-    mupdf = await createMuPdf.createMuPdf();
-}
+//window.loadMupdf = async function loadMupdf() {
+//    var createMuPdf = require('mupdf-js');
+//    mupdf = await createMuPdf.createMuPdf();
+//}
 
 window.disposeMupdf = function disposeMupdf() {
     mupdf = undefined;
@@ -95,16 +95,16 @@ window.getObjectsUrls = function getObjectsUrls(datasmimes) {
     return urls;
 }
 
-window.convert = async function convert(data) {
-    const svgs = [];
-    const doc = mupdf.load(data);
-    const pages = await mupdf.countPages(doc);
-    for (let i = 1; i <= pages; i++) {
-        svgs.push([mupdf.drawPageAsSVG(doc, i), mupdf.getPageText(doc, i)]);
-    }
-    mupdf.freeDocument(doc);
-    return svgs;
-}
+//window.convert = async function convert(data) {
+//    const svgs = [];
+//    const doc = mupdf.load(data);
+//    const pages = await mupdf.countPages(doc);
+//    for (let i = 1; i <= pages; i++) {
+//        svgs.push([mupdf.drawPageAsSVG(doc, i), mupdf.getPageText(doc, i)]);
+//    }
+//    mupdf.freeDocument(doc);
+//    return svgs;
+//}
 
 window.offCanvasInit = function offCanvasInit(id) {
     offCanvas = new bootstrap.Offcanvas(document.getElementById(id));

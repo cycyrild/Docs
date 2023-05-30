@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.1" />
+    <PackageReference Include="PdfToSvg.NET" Version="0.9.0" />
     <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="2.88.3" />
     <PackageReference Include="SkiaSharp.Views.Blazor" Version="2.88.3" />
     <PackageReference Include="Toolbelt.Blazor.FileDropZone" Version="2.1.1" />

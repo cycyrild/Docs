@@ -4,9 +4,23 @@ namespace DocsWASM.Shared
 {
 	public class ImageProcessing
 	{
+        public static byte[] ImgToAvif(byte[] ImgBin, int SizeRatio, int Quality, SKFilterQuality FilterQuality = SKFilterQuality.Medium)
+        {
+            SKEncodedOrigin orientation;
+            using MemoryStream ms = new MemoryStream(ImgBin);
+            using (var inputStream = new SKManagedStream(ms))
+            using (var codec = SKCodec.Create(inputStream))
+                orientation = codec.EncodedOrigin;
+            ms.Position = 0;
+            using SKBitmap sourceBitmap = SKBitmap.Decode(ms);
 
+            var res = GetNewResolution(sourceBitmap.Width, sourceBitmap.Height, SizeRatio);
+            using SKBitmap scaledBitmap = HandleOrientation(sourceBitmap.Resize(new SKImageInfo(res.width, res.height), FilterQuality), orientation);
+            using SKData data = scaledBitmap.Encode(SKEncodedImageFormat.Avif, Quality);
+            return data.ToArray();
+        }
 
-		public static byte[] ImgToWebP(byte[] ImgBin, int SizeRatio, int Quality, SKFilterQuality FilterQuality = SKFilterQuality.Medium)
+        public static byte[] ImgToWebP(byte[] ImgBin, int SizeRatio, int Quality, SKFilterQuality FilterQuality = SKFilterQuality.Medium)
 		{
 			SKEncodedOrigin orientation;
 			using MemoryStream ms = new MemoryStream(ImgBin);
