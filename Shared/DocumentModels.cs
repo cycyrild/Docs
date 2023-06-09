@@ -59,11 +59,6 @@ namespace DocsWASM.Shared
 			public byte[] Bin { get; set; }
 			public byte[] PlaceHolder { get; set; }
 		}
-
-		public class PreviewDocumentHeaders
-		{
-			public List<DocumentHeader> Headers { get; set; }
-		}
 	}
 
 

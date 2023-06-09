@@ -1,9 +1,219 @@
 ﻿@page "/admin"
+@using DocsWASM.Client.AppState;
+@inject HttpClient Http
+@inject UserTypes _UserTypes
+@using DocsWASM.Shared
+@using static DocsWASM.Shared.AccountModels;
+@using static DocsWASM.Shared.Moderation.Moderation;
+@inject IJSRuntime JS
+@using DocsWASM.Shared.Serializer;
+@using DocsWASM.Client.SharedComponent;
+@using DocsWASM.Shared.Helpers;
+@using DocsWASM.Client.SharedComponent.Document;
 
-<h1 class="display-3">Panel d'administration</h1>
-<h2>Documents à modérer :</h2>
+<EditDelete httpClient="Http" @ref="editDelete">
+</EditDelete>
 
+<h1 class="display-3">Admin panel</h1>
+
+<section class="featured mb-3">
+    <h2 class="d-flex display-6 gap-4" tabindex="-1">
+        <i class="bi bi-people"></i>
+        Users
+	</h2>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Username</th>
+                    <th scope="col">Created date</th>
+                    <th scope="col">Last IP adress</th>
+                    <th scope="col">Last login date</th>
+                    <th scope="col">First name</th>
+                    <th scope="col">Last name</th>
+                    <th scope="col">Type of user</th>
+                    <th scope="col">School name</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @if (users != null)
+                {
+                    @foreach (var user in users)
+                    {
+                        <tr>
+                            <th scope="row">@user.UserName</th>
+                            <td>@user.CreatedDate</td>
+                            <td>@user.LastIp</td>
+                            <td>@user.LastLogin</td>
+                            <td>@user.FirstName</td>
+                            <td>@user.LastName</td>
+                            <td>
+                                @if (_UserTypes.UserTypeByteNameimgHTML != null)
+                                {
+                                    @_UserTypes.UserTypeByteNameimgHTML[user.TypeOfUser].Name
+                                }
+                            </td>
+                            <td>@user.SchoolName</td>
+                        </tr>
+                    }
+                }
+
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="featured mb-3">
+    <h2 class="d-flex display-6 gap-4" tabindex="-1">
+        <i class="bi bi-file-check"></i>
+        Work to be approved
+	</h2>
+    @if(documents != null)
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var item in documents)
+            {
+                <div class="featured flex-nowrap d-flex align-items-center gap-3 p-1" id=@($"d{item.DocumentId}")>
+                    <a class="col-2 px-2" href="/view/document/@item.DocumentId">
+                        <img class="imgPicture mx-auto my-2" src="data:image/webp;base64, @Convert.ToBase64String(item.ImgPreview)" />
+                    </a>
+                    <div class="col" style="min-width:0">
+                        <div class="d-flex flex-column">
+                            <div class="text-truncate">
+                                <a class="ahover" href="/view/document/@item.DocumentId">
+                                    <b>
+                                        @item.DocumentName
+                                    </b>
+                                </a>
+                            </div>
+                            <div class="text-truncate">
+                                <a class="ahover" href="/view/documents?school=@item.SchoolName">
+                                    @item.SchoolName
+                                </a>
+                            </div>
+                            <div class="text-truncate">
+                                @item.OwnerUserName
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2 d-none d-md-block">
+                        <div class="d-flex flex-column">
+                            <div class="text-truncate">
+                                <a class="ahover" href="/view/documents?subjectid=@item.SubjectType">
+                                    @item.SubjectTypeName
+                                </a>
+                            </div>
+                            <div class="text-truncate">
+                                <a class="ahover text-muted" href="/view/documents?chapterid=@item.ChapterId">
+                                    @item.ChapterName
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-1 d-none d-lg-block">
+                        <div class="text-truncate">
+                            @item.CreatedDate.ToString("d")
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <a class="ahover d-block text-truncate" href="/view/documents?doctypeid=@item.DocType">
+                            @item.DocTypeName
+                        </a>
+                    </div>
+                    <div class="col-2">
+                        <div class="text-nowrap text-center">
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Small button group">
+                                <button type="button" class="btn btn-outline-dark"
+                                @onclick="(async () => await Moderate(ActionType.approve, item.DocumentId, item.DocumentName))">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    Approve
+                                </button>
+                                <button type="button" class="btn btn-outline-dark"
+                                @onclick="(() => EditOrDelete(item.DocumentId))">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                    Edit or delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+<style>
+    .imgPicture {
+        max-width: 100%;
+        max-height: 80px;
+    }
+</style>
 
 @code {
+    private bool loading = false;
+    private List<User> users;
+    private List<DocumentModels.DocumentHeader> documents;
+    private EditDelete? editDelete;
 
+    private void EditOrDelete(uint docId)
+    {
+        editDelete.document = documents.FirstOrDefault(x => x.DocumentId == docId);
+        editDelete.editEvent = (async () => await EditEvent(editDelete.document.DocumentName));
+        editDelete.deleteEvent = (async () => await DeleteEvent(editDelete.document.DocumentName));
+
+        editDelete.modal.ModalShow();
+    }
+
+    private async Task EditEvent(string docName)
+    {
+        await JS.InvokeVoidAsync("alert", $@"""{docName}"" edited !");
+        await FetchData();
+    }
+
+    private async Task DeleteEvent(string docName)
+    {
+        await JS.InvokeVoidAsync("alert", $@"""{docName}"" deleted !");
+        await FetchData();
+    }
+
+
+    private async Task FetchData()
+    {
+        users = null;
+        documents = null;
+        loading = true;
+        StateHasChanged();
+        users = await Http.GetFromJsonAsync<List<User>>("moderation/users");
+        documents = DocumentHeaderListSerializer.Deserialize(await Http.GetByteArrayAsync("content/documents?approved=0"));
+        loading = false;
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchData();
+    }
+
+    private async Task Moderate(ActionType approve, uint id, string docName)
+    {
+        Dictionary<string, string> formData = new Dictionary<string, string>
+        {
+            { "approve", ((int)approve).ToString() },
+            { "id", id.ToString() },
+        };
+
+        var formContent = new FormUrlEncodedContent(formData);
+
+        HttpResponseMessage response = await Http.PostAsync("moderation/moderate", formContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await JS.InvokeVoidAsync("alert", $@"""{docName}"" {approve} !");
+            await FetchData();
+        }
+        else
+            await JS.InvokeVoidAsync("alert", $@"Failed !");
+
+
+    }
 }

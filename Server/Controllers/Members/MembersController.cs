@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using static DocsWASM.Shared.AccountModels;
-using static MongoDB.Bson.Serialization.Serializers.SerializerHelper;
 
 namespace DocsWASM.Server.Controllers.Members
 {
@@ -42,19 +41,24 @@ namespace DocsWASM.Server.Controllers.Members
 				) AS a
 			on login.id = a.ownerUserId
 			GROUP BY login.id, login.username, login.userType
-			order by count desc;
+			order by count desc
+			{(page != null && limit != null ? @"limit @limit
+			offset @offset" : "")}
 			";
+			cmd.Parameters.AddWithValue("@limit", limit);
+			cmd.Parameters.AddWithValue("@offset", offset);
+
 
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
 					ranking.Add(new()
 					{
 						UploadCount = (int)((ulong)reader[3]),
-						Member = new MembersModel()
+						Member = new User()
 						{
-							id = (uint)reader[0],
-							username = (string)reader[1],
-							userType = (byte)reader[2]
+							Id = (uint)reader[0],
+							UserName = (string)reader[1],
+							TypeOfUser = (byte)reader[2]
 						}
 					});
 

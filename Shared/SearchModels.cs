@@ -10,10 +10,6 @@ namespace DocsWASM.Shared
 {
 	public class SearchModels
 	{
-		public class SearchResults
-		{
-			public IEnumerable<SearchResult >searchResult { get; set; }
-		}
 
 		public class SearchResult
 		{

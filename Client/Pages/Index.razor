@@ -7,6 +7,7 @@
 @using DocsWASM.Client.AppState;
 @using DocsWASM.Client.SharedComponent;
 @using static DocsWASM.Shared.Helpers.Collection;
+@using DocsWASM.Shared.Serializer;
 @inject Actions _Actions
 @inject Session _Session
 @inject IJSRuntime JSRuntime	
@@ -54,7 +55,7 @@
 		<div class="d-flex flex-row gap-3">
 		@if (documentHeaders!=null)
 		{
-			@foreach (var item in documentHeaders.Headers)
+			@foreach (var item in documentHeaders)
 			{
 				<div class="pe-2 flex-shrink-0">
 					<a style="" class="anostyle hoverable cell d-flex flex-column p-3" id=@($"d{item.DocumentId}") href=@($"/view/document/{item.DocumentId}")>
@@ -99,7 +100,7 @@
 </style>
 
 @code{
-	private DocumentModels.PreviewDocumentHeaders? documentHeaders;
+	private List<DocumentModels.DocumentHeader>? documentHeaders;
 	private bool loading = false;
 	private bool scrollToLastElement = false;
 	private bool initedTxtType = false;
@@ -112,7 +113,7 @@
 		loading = true;
 		var subjectsChapters = await Http.GetFromJsonAsync<SubjectsChapters>("documents/getsubjectschapters");
 		chapters = subjectsChapters.chapters.SelectMany(x => x.Value.Select(x => x.name)).Shuffle(new Random());
-		documentHeaders = Bson.FromBson<DocumentModels.PreviewDocumentHeaders>(await Http.GetByteArrayAsync("Preview/lastDocuments/all/10"));
+		documentHeaders = DocumentHeaderListSerializer.Deserialize(await Http.GetByteArrayAsync("Preview/lastDocuments/all?limit=10"));
 		loading = false;
 	}
 
@@ -126,7 +127,7 @@
 		}
 
 		if (!scrollToLastElement && _Session.lastDocumentViewer != null &&
-	documentHeaders?.Headers.FirstOrDefault(x => x.DocumentId == _Session.lastDocumentViewer) != null)
+	documentHeaders?.FirstOrDefault(x => x.DocumentId == _Session.lastDocumentViewer) != null)
 		{
 			await JSRuntime.InvokeVoidAsync("scrollToElement", $"d{_Session.lastDocumentViewer}");
 			scrollToLastElement = true;

@@ -7,6 +7,7 @@ using static DocsWASM.Shared.AccountModels;
 using static DocsWASM.Server.Helper;
 using System.Text.Json;
 using DocsWASM.Server;
+using Microsoft.Net.Http.Headers;
 
 namespace DocsWASM.Account
 {
@@ -24,7 +25,7 @@ namespace DocsWASM.Account
 		}
 
 		[HttpGet("my")]
-        public async Task<User> GetCurrentUserInfo()
+        public async Task<IActionResult> GetCurrentUserInfo()
         {
             if (User != null && uint.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId))
             {
@@ -43,17 +44,18 @@ namespace DocsWASM.Account
                                         fullNamePrivacy,
                                         createdIp,
                                         lastIp,
-                                        userType
+                                        userType,
+                                        schoolName
                                     FROM login
                                     WHERE id = @id
-                                    LIMIT 0, 1";
+                                    LIMIT 1";
                     cmd.Parameters.AddWithValue("@id", userId);
                     using (var reader = await cmd.ExecuteReaderAsync())
                         while (await reader.ReadAsync())
                         {
-                            return new User()
+                            
+                            var obj = new User()
                             {
-                                Authentified = true,
                                 Id = (uint)reader[0],
                                 UserName = (string)reader[1],
                                 FirstName = (string)reader[2],
@@ -67,10 +69,13 @@ namespace DocsWASM.Account
                                 CreatedIp = reader[10] != System.DBNull.Value ? (string)reader[10] : null,
                                 LastIp = reader[11] != System.DBNull.Value ? (string)reader[11] : null,
                                 TypeOfUser = (byte)reader[12],
+                                SchoolName = (string)reader[13],
                             };
-                        }
+						    string jsonString = JsonSerializer.Serialize(obj);
+                            return Content(jsonString, "application/json");
+					    }
             }
-            return new();
+            return Unauthorized();
         }
     }
 }

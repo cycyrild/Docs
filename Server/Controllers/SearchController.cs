@@ -4,6 +4,7 @@ using DocsWASM.Shared.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using static DocsWASM.Shared.DocumentModels;
 using static DocsWASM.Shared.SearchModels;
+using DocsWASM.Shared.Serializer;
 
 namespace DocsWASM.Server.Controllers
 {
@@ -103,19 +104,9 @@ WHERE
 							page = (uint)reader[2]
 						});
 				}
-			var toSend = new SearchResults() { searchResult = Results.Select(x => x.Value) };
+			var toSend = Results.Select(x => x.Value).ToList();
 
-			return File(Bson.ToBson(toSend), "application/octet-stream");
+			return File(SearchResultListSerializer.Serialize(toSend), "application/octet-stream");
 		}
-
-		/*SELECT documents.name, pages.documentId, pages.pageNo, pages.paragraphs
-		FROM (
-			SELECT DISTINCT documentId
-			FROM pages
-			WHERE paragraphs LIKE "%e%"
-		) AS p
-		INNER JOIN documents ON p.documentId = documents.id
-		LEFT JOIN pages ON p.documentId = pages.documentId
-			AND pages.paragraphs LIKE "%e%";*/
 	}
 }

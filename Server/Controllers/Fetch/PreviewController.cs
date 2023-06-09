@@ -1,12 +1,13 @@
 ﻿using DocsWASM.Shared;
-using DocsWASM.Shared.Helpers;
+using DocsWASM.Shared.Serializer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
+using static DocsWASM.Shared.DocumentModels;
 
 namespace DocsWASM.Server.Controllers.Document
 {
-	[Route("api/[controller]")]
+    [Route("api/[controller]")]
 	[ApiController]
 	public class PreviewController : ControllerBase
 	{
@@ -20,12 +21,12 @@ namespace DocsWASM.Server.Controllers.Document
 
 		public AppDb Db { get; }
 
-		[Route("lastDocuments/all/{limit}")]
+		[Route("lastDocuments/all")]
 		public async Task<IActionResult> LastDocuments(int limit)
 		{
 			await Db.Connection.OpenAsync();
 
-			DocumentModels.PreviewDocumentHeaders documents = new();
+			List<DocumentHeader> documentHeaders = new();
 			MySqlCommand cmd;
 			cmd = Db.Connection.CreateCommand();
 			cmd.CommandText = @"
@@ -44,14 +45,14 @@ namespace DocsWASM.Server.Controllers.Document
 			documents.createdDate,
 			documents.approved
 			from documents
+			inner join subjects on subjects.id = documents.subjectId
 			inner join login on documents.ownerUserId = login.id
 			ORDER BY documents.createdDate DESC
 			limit @limit";
 			cmd.Parameters.AddWithValue("@limit", limit);
-			documents.Headers = new();
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
-					documents.Headers.Add(new()
+					documentHeaders.Add(new()
 					{
 						DocumentId = (uint)reader[0],
 						DocumentName = (string)reader[1],
@@ -66,8 +67,9 @@ namespace DocsWASM.Server.Controllers.Document
 						ChapterId = (uint)reader[10],
 						CreatedDate= (DateTime)reader[11],
 						Approved = (byte)reader[12],
+						
 					});
-			return File(Bson.ToBson(documents), "application/octet-stream");
+			return File(DocumentHeaderListSerializer.Serialize(documentHeaders), "application/octet-stream");
 		}
 
 	}

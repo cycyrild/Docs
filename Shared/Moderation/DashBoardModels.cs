@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace DocsWASM.Shared.Moderation
 {
-	public class DashboardModels
+	public class Moderation
 	{
-		public IEnumerable<User> Users { get; set; }
+		public enum ActionType {approve, unapprove};
+
 	}
 }

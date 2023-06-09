@@ -147,25 +147,19 @@ namespace XMLHelper
 
         public static string Clean(string svg)
 		{
-            XmlDocument doc = new XmlDocument();
+
+			XmlDocument doc = new XmlDocument();
             doc.LoadXml(svg);
 
             ValidateNoJavascript(doc.DocumentElement);
-
             RemoveComments(doc);
-
-            // Remove XML declaration
-            if (doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration)
-                doc.RemoveChild(doc.FirstChild);
-
-            // Remove DOCTYPE (if present)
-            if (doc.FirstChild.NodeType == XmlNodeType.DocumentType)
-                doc.RemoveChild(doc.FirstChild);
 
             var settings = new XmlWriterSettings
             {
                 Indent = false,
-                NewLineHandling = NewLineHandling.None
+                NewLineHandling = NewLineHandling.None,
+                OmitXmlDeclaration = true,
+                Encoding = Encoding.UTF8,
             };
 
             using (var stringWriter = new StringWriter())

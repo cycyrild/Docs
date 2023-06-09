@@ -7,7 +7,7 @@ using MySql.Data.MySqlClient;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Net.Http.Headers;
 using static DocsWASM.Shared.UploadModels;
-
+using static DocsWASM.Shared.Serializer.DocumentSerializer;
 namespace DocsWASM.Server.Controllers.Document
 {
 	[Route("api/[controller]")]
@@ -131,8 +131,7 @@ namespace DocsWASM.Server.Controllers.Document
 					});
 
 			Response.Headers["Content-Encoding"] = "br";
-
-			return File(await Helpers.Compression.CompressBytesAsync(Bson.ToBson(document)),  "application/x-brotli", $"{id}.br");
+			return File(await Helpers.Compression.CompressBytesAsync(Serialize(document)),  "application/x-brotli");
 		}
 
 	}

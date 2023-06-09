@@ -7,15 +7,14 @@
 @using System.Text
 @using Microsoft.AspNetCore.Components;
 @using System.Net.Http;
-@using static DocsWASM.Shared.Helpers.Bson;
 @using static DocsWASM.Shared.ImageProcessing;
 @using DocsWASM.Client.SharedComponent;
-@implements IAsyncDisposable
+@using DocsWASM.Shared.Serializer;
 @inject HttpClient Http
 @inject IJSRuntime JS
 
 @page "/upload"
-<h1 class="display-1">Share content</h1>
+<h1 class="display-3">Share content</h1>
 <LoadingComponent loading="isLoading">
 </LoadingComponent>
 
@@ -260,7 +259,9 @@
 	private async Task Send()
 	{
 		isLoading = true;
-		var content = new ByteArrayContent(ToBson(new UploadSendModel() { Pages = parsedPages, Upload = model }));
+		var byteArray = UploadSendModelSerializer.Serialize(new UploadSendModel() { Pages = parsedPages, Upload = model });
+		Console.WriteLine(byteArray.Length);
+		var content = new ByteArrayContent(byteArray);
 		var result = await Http.PostAsync("Upload/uploadDocuments", content);
 		if (result.StatusCode == System.Net.HttpStatusCode.OK)
 			resultUpload = "Document processed successfully";
@@ -268,17 +269,6 @@
 			resultUpload = "An error has occurred. Check if a file with the same name already exists or if you are logged in.";
 		isLoading = false;
 	}
-
-	protected override async Task OnInitializedAsync()
-	{
-		var subjectsChapters = await Http.GetFromJsonAsync<SubjectsChapters>("documents/getsubjectschapters");
-		chapters = subjectsChapters.chapters;
-		subjects = subjectsChapters.subjects;
-		yearsGroups = await Http.GetFromJsonAsync<Dictionary<string, string[]>>("documents/getyearsgroups");
-		docTypes = await Http.GetFromJsonAsync<Dictionary<byte, string>>("documents/getdoctypes");
-		schools = await Http.GetFromJsonAsync<string[]>("documents/getschools");
-	}
-
 
 	private async Task LoadFiles(InputFileChangeEventArgs e)
 	{
@@ -293,7 +283,7 @@
 			foreach (var file in files)
 			{
 				if (!UploadModels.dataBinTypes.ContainsKey(Path.GetExtension(file.Name)))
-					throw new Exception("File extension not supported at this time.");
+					throw new Exception("File extension not supported at this time");
 
 				using (var ms = new MemoryStream())
 				using (var fileStream = file.OpenReadStream(maxFileSize))
@@ -313,22 +303,28 @@
 					if (parsedPages.Count < maxAllowedPages)
 						parsedPages.Add(subItem);
 					else
-						uploadErrorMsg = "Page limit per document reached";
+						throw new Exception("Page limit per document reached");
 				}
 			}
 
-			if (parsedPages.Count > 0) model.FilePresent = true;
+			if (parsedPages.Count > 0)
+				model.FilePresent = true;
 		}
 		catch(Exception ex)
 		{
 			uploadErrorMsg = ex.Message;
 		}
 		isLoading = false;
-
 	}
 
-	public async ValueTask DisposeAsync()
+	protected override async Task OnInitializedAsync()
 	{
+		var subjectsChapters = await Http.GetFromJsonAsync<SubjectsChapters>("documents/getsubjectschapters");
+		chapters = subjectsChapters.chapters;
+		subjects = subjectsChapters.subjects;
+		yearsGroups = await Http.GetFromJsonAsync<Dictionary<string, string[]>>("documents/getyearsgroups");
+		docTypes = await Http.GetFromJsonAsync<Dictionary<byte, string>>("documents/getdoctypes");
+		schools = await Http.GetFromJsonAsync<string[]>("documents/getschools");
 	}
 
 }

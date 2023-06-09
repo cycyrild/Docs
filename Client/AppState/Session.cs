@@ -7,5 +7,10 @@ namespace DocsWASM.Client.AppState
 	{
 		public AccountModels.User? user;
 		public uint? lastDocumentViewer;
+		public bool IsAllowedViewModerate()
+		{
+			return user != null && (user.TypeOfUser == 3 || user.TypeOfUser == 1);
+
+		}
 	}
 }

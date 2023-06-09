@@ -4,6 +4,13 @@
 <nav aria-label="breadcrumb">
 	<ol class="breadcrumb">
 		@{
+			if(currentView == paths.schools)
+			{
+				<li class="breadcrumb-item">
+					/
+				</li>
+			}
+
 			if(school != null)
 			{
 				<li class="breadcrumb-item">

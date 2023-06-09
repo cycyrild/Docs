@@ -13,6 +13,7 @@
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 @inject IJSRuntime JS
+@using static DocsWASM.Shared.Serializer.DocumentSerializer;
 
 <LoadingComponent loading="loading"></LoadingComponent>
 @if (document != null)
@@ -22,27 +23,37 @@
 		<AnnotationHelper DocumentId="Id" Page="annotationsHelperPage" GoBack="HideAnnotation"></AnnotationHelper>
 	}*@
 
-	@if(document.DocumentHeader.Approved == 0)
+	@if (document.DocumentHeader.Approved == 0 && !_Session.IsAllowedViewModerate())
 	{
 		<div class="p-2 bg-light rounded-1 shadow-sm position-absolute top-50 start-50 translate-middle w-75"
-		style="z-index: 1;">
+			style="z-index: 1;">
 			<span class="d-block display-6 text-center mb-4">THIS RESOURCE IS NOT YET APPROVED</span>
 			<span class="d-block h6 lead text-center">Come back later, once the resource has been verified</span>
 		</div>
 		<style>
 			html {
-			  overflow: hidden;
+			overflow: hidden;
 			}
 			.zoomRow {
-				display:none !important
+			display:none !important
 			}
 		</style>
 	}
 
 
+
+
 	<EditDelete 
-		deleteEvent="@(async ()=> await JS.InvokeVoidAsync("alert",$@"""{document.DocumentHeader.DocumentName}"" deleted !"))"
-		editEvent="@(async ()=> await JS.InvokeVoidAsync("alert",$@"""{document.DocumentHeader.DocumentName}"" edited !"))"
+		deleteEvent="@(async ()=>
+		{
+			await JS.InvokeVoidAsync("alert",$@"""{document.DocumentHeader.DocumentName}"" deleted !"); 
+			await FetchData();
+		})"
+		editEvent="@(async ()=>
+		{
+			await JS.InvokeVoidAsync("alert",$@"""{document.DocumentHeader.DocumentName}"" edited !");
+			await FetchData();
+		})"
 		document="document.DocumentHeader"
 		httpClient="Http" @ref="editDelete">
 	</EditDelete>
@@ -56,7 +67,16 @@
 					<span class="d-inline-block" style="width:50px">@(((int)(_DocumentZoom.documentZoomLevel*100)) + " %") </span>
 					<input class="d-inline-block" min="@(_DocumentZoom.zoomMin*100)" max="@(_DocumentZoom.zoomMax*100)" step="1" value="@(_DocumentZoom.documentZoomLevel*100)" @oninput="InputZoomChanged" type="range">
 				</div>
-				@if(_Session.user!= null && _Session.user.Id == document.DocumentHeader.OwnerUserId)
+
+				@if (document.DocumentHeader.Approved == 0)
+				{
+					<div class="my-auto" >
+						<i class="bi bi-lock"></i>
+						Unapproved
+					</div>
+				}
+
+				@if(_Session.user!= null && (_Session.user.Id == document.DocumentHeader.OwnerUserId || _Session.IsAllowedViewModerate()))
 				{
 					<div class="my-auto" style="cursor:pointer" @onclick="(()=> editDelete.modal.ModalShow())">
 						<span class="badge rounded-pill text-bg-primary">
@@ -268,6 +288,23 @@
 	private DocumentModels.Page annotationsHelperPage;
 	private bool showCorrection = true;
 
+	private async Task FetchData()
+	{
+		document = null;
+		loading = true;
+		StateHasChanged();
+		var request = await Http.GetAsync($"Document/View/{Id}");
+		if(request.StatusCode == System.Net.HttpStatusCode.OK)
+		{
+			document = Deserialize(await request.Content.ReadAsByteArrayAsync());
+			documentPages = document.Page.Count();
+			_Session.lastDocumentViewer = document.DocumentHeader.DocumentId;
+			urls = await JS.InvokeAsync<string[]>("getObjectsUrls", document.Page.Select(x => new {data = x.Bin, type = DocsWASM.Shared.DocumentModels.dataBinTypesMime[x.DocBinType]}));
+		}
+
+		loading = false;
+		StateHasChanged();
+	}
 
 	private async void HideAnnotation()
 	{
@@ -294,20 +331,10 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		loading = true;
 		_DocumentZoom.RefreshZoomDocument += StateHasChanged;
 
 		await JS.InvokeVoidAsync("pinchZoomLoad", ".zoomRow", "--zoom");
-		var request = await Http.GetAsync($"Document/View/{Id}");
-		if(request.StatusCode == System.Net.HttpStatusCode.OK)
-		{
-			document = Bson.FromBson<DocumentModels.Document>(await request.Content.ReadAsByteArrayAsync());
-			documentPages = document.Page.Count();
-			_Session.lastDocumentViewer = document.DocumentHeader.DocumentId;
-			urls = await JS.InvokeAsync<string[]>("getObjectsUrls", document.Page.Select(x => new {data = x.Bin, type = DocsWASM.Shared.DocumentModels.dataBinTypesMime[x.DocBinType]}));
-		}
-
-		loading = false;
+		await FetchData();
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)

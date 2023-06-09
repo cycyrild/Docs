@@ -21,16 +21,25 @@
 </Router>
 
 @code{
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        var user = await Http.GetFromJsonAsync<AccountModels.User>("account/my");
-        if (user.Authentified)
+        _UserTypes.UserTypeByteNameimgHTML = await Http.GetFromJsonAsync<Dictionary<byte, TypeOfUsers>>("fetch/typeofusers");
+        HttpResponseMessage response = await Http.GetAsync("account/my");
+        if (response.IsSuccessStatusCode)
         {
-            _Session.user = user;
+            string responseString = await response.Content.ReadAsStringAsync();
+            AccountModels.User userObj = JsonSerializer.Deserialize<AccountModels.User>(responseString);
+            _Session.user = userObj;
         }
 
-        _UserTypes.UserTypeByteNameimgHTML = await Http.GetFromJsonAsync<Dictionary<byte, TypeOfUsers>>("fetch/typeofusers");
 
     }
+
+    /*protected override async Task OnParametersSetAsync()
+    {
+
+
+
+    }*/
 }
 

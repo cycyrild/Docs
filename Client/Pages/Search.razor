@@ -10,6 +10,7 @@
 @using DocsWASM.Client.SharedComponent;
 @implements IDisposable
 @inject Actions _Actions
+@using DocsWASM.Shared.Serializer;
 
 <LoadingComponent loading="loading">
 </LoadingComponent>
@@ -22,10 +23,10 @@
 	return;
 
 <div class="d-flex flex-column gap-2">
-	@foreach (var item in searchResults.searchResult)
+	@foreach (var item in searchResults)
 	{
 		<div class="featured p-1">
-			<div class="d-flex flex-column gap-1">
+			<div class="d-flex flex-column gap-1 py-2">
 				<div class="flex-nowrap d-flex align-items-center gap-3 " id=@($"d{item.documentHeader.DocumentId}")>
 					<a class="anostyle col-2 px-2" href="/view/document/@item.documentHeader.DocumentId">
 						<img class="imgPicture mx-auto my-2" src="data:image/webp;base64, @Convert.ToBase64String(item.documentHeader.ImgPreview)" />
@@ -72,8 +73,8 @@
 							@item.documentHeader.CreatedDate.ToString("d")
 						</div>
 					</div>
-					<div class="col-md">
-						<a class="ahover text-truncate" href="/view/documents?doctypeid=@item.documentHeader.DocType">
+					<div class="col-2">
+						<a class="d-block ahover text-truncate" href="/view/documents?doctypeid=@item.documentHeader.DocType">
 							@item.documentHeader.DocTypeName
 						</a>
 					</div>
@@ -89,12 +90,14 @@
 					<div class="d-flex flex-column gap-2">
 						@foreach (var occ in item.pageMatchs)
 						{
-							<div class="d-flex">
-								<div class="col-1 d-flex flex-row align-items-center justify-content-center gap-2">
-									<i class="bi bi-file-earmark-fill"></i>
-									@occ.page
+							<div class="d-flex gap-3">
+								<div class="col-1 d-flex flex-row align-items-center justify-content-center gap-3">
+									<i class="bi bi-file-earmark-fill w-25"></i>
+									<div class="d-block text-center w-25">
+										@occ.page
+									</div>
 								</div>
-								<div class="col flex-row align-items-center">
+								<div class="d-block flex-row align-items-center" style="min-width: 0">
 									@((MarkupString)(HighlightText(occ.match, search)))
 								</div>
 							</div>
@@ -116,7 +119,7 @@
 	}
 </style>
 @code {
-	private SearchResults? searchResults;
+	private List<SearchResult>? searchResults;
 
 	[Parameter]
 	[SupplyParameterFromQuery(Name = "q")]
@@ -137,7 +140,7 @@
 		loading = true;
 		if (search != "")
 			searchResults =
-			(Bson.FromBson<SearchResults>
+			(SearchResultListSerializer.Deserialize
 				(await Http.GetByteArrayAsync($"search/search?q={HttpUtility.UrlEncode(search)}")));
 		loading = false;
 	}

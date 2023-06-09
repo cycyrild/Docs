@@ -8,6 +8,7 @@
 @inject Session _Session
 @inject IJSRuntime JS
 @using DocsWASM.Client.SharedComponent;
+@using DocsWASM.Shared.Serializer;
 
 <DocsWASM.Client.Pages.Views.Breadcrumb school="@school"
 yearGroup="@yearGroup"
@@ -20,10 +21,10 @@ currentView="PathModels.paths.documents" />
 
 <h1 class="display-3" tabindex="-1">Documents</h1>
 
-@if (documentTypes != null)
+@if (documents != null)
 {
 	<div class="d-flex flex-column gap-3">
-		@foreach (var item in documentTypes.Headers)
+		@foreach (var item in documents)
 		{
 			<div class="featured flex-nowrap d-flex align-items-center gap-3 p-1" id=@($"d{item.DocumentId}")>
 			<a class="col-2 px-2" href="/view/document/@item.DocumentId">
@@ -31,7 +32,7 @@ currentView="PathModels.paths.documents" />
 			</a>
 			<div class="col" style="min-width:0">
 				<div class="d-flex flex-column">
-						<div class="text-truncate">
+					<div class="text-truncate">
 						@if (item.Approved == 0)
 						{
 							<i class="bi bi-lock"></i>
@@ -114,7 +115,7 @@ currentView="PathModels.paths.documents" />
 	[SupplyParameterFromQuery]
 	public string? docTypeId { get; set; }
 
-	private DocumentsModel documentTypes;
+	private List<DocumentModels.DocumentHeader> documents;
 	private bool scrollToLastElement = false;
 
 	private bool loading = false;
@@ -122,7 +123,7 @@ currentView="PathModels.paths.documents" />
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!scrollToLastElement && _Session.lastDocumentViewer != null &&
-		documentTypes?.Headers.FirstOrDefault(x => x.DocumentId == _Session.lastDocumentViewer) != null)
+		documents?.FirstOrDefault(x => x.DocumentId == _Session.lastDocumentViewer) != null)
 		{
 			await JS.InvokeVoidAsync("scrollToElement", $"d{_Session.lastDocumentViewer}");
 			scrollToLastElement = true;
@@ -141,7 +142,7 @@ currentView="PathModels.paths.documents" />
 		if (docTypeId != null) query["doctypeid"] = docTypeId;
 		var queryStrg = $"content/documents{UriHelper.ToQueryString(query)}";
 
-		documentTypes = Bson.FromBson<DocumentsModel>(await Http.GetByteArrayAsync(queryStrg));
+		documents = DocumentHeaderListSerializer.Deserialize(await Http.GetByteArrayAsync(queryStrg));
 		loading = false;
 	}
 }

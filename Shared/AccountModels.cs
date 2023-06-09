@@ -2,10 +2,8 @@
 {
     public class AccountModels
     {
-
         public class User
         {
-            public bool Authentified { get; set; }
             public uint Id { get; set; }
             public string UserName { get; set; }
             public string FirstName { get; set; }
@@ -19,6 +17,7 @@
             public string? CreatedIp { get; set; }
             public string? LastIp   { get; set; }
             public byte TypeOfUser { get; set; }
+            public string SchoolName { get; set; }  
         }
     }
 }

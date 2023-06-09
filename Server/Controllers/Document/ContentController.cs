@@ -8,6 +8,7 @@ using DocsWASM.Client.Pages;
 using MySql.Data.MySqlClient;
 using static DocsWASM.Shared.PathModels;
 using Path = DocsWASM.Shared.PathModels.Path;
+using DocsWASM.Shared.Serializer;
 
 namespace DocsWASM.Server.Controllers.Document
 {
@@ -223,10 +224,10 @@ namespace DocsWASM.Server.Controllers.Document
 		}
 
 		[Route("Documents")]
-		public async Task<IActionResult> GetDocument(string? school, string? yearGroup, string? subjectId, string? chapterId, string? docTypeId, int? page, int? limit)
+		public async Task<IActionResult> GetDocument(string? school, string? yearGroup, string? subjectId, string? chapterId, string? docTypeId, int? page, int? limit, int? approved)
 		{
 			var conditions = new List<string>();
-			var documents = new DocumentsModel();
+			var documents = new List<DocumentModels.DocumentHeader>();
 			int offset = (page == null || limit == null ? -1 : limit.Value * page.Value);
 			await Db.Connection.OpenAsync();
 			var cmd = Db.Connection.CreateCommand();
@@ -255,6 +256,11 @@ namespace DocsWASM.Server.Controllers.Document
 			{
 				conditions.Add("documents.chapterId = @chapterId");
 				cmd.Parameters.AddWithValue("@chapterId", chapterId);
+			}
+			if(approved!=null)
+			{
+				conditions.Add("documents.approved = @approved");
+				cmd.Parameters.AddWithValue("@approved", approved);
 			}
 
 			cmd.CommandText = @$"SELECT	documents.id,
@@ -287,10 +293,9 @@ namespace DocsWASM.Server.Controllers.Document
 			cmd.Parameters.AddWithValue("@limit", limit);
 			cmd.Parameters.AddWithValue("@offset", offset);
 
-			documents.Headers = new();
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
-					documents.Headers.Add(new()
+					documents.Add(new()
 					{
 						DocumentId = (uint)reader[0],
 						DocumentName = (string)reader[1],
@@ -311,7 +316,7 @@ namespace DocsWASM.Server.Controllers.Document
 						Approved = (byte)reader[16]
 					});
 
-			return File(Bson.ToBson(documents), "application/octet-stream");
+			return File(DocumentHeaderListSerializer.Serialize(documents), "application/octet-stream");
 		}
 
 

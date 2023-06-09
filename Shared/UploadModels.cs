@@ -25,12 +25,12 @@ namespace DocsWASM.Shared
 
 		public static Dictionary<string, byte> dataBinTypes = new Dictionary<string, byte>()
 		{
-			{ ".svg", (byte)dataBinTypesEnum.svg},
+			//{ ".svg", (byte)dataBinTypesEnum.svg},
 			{ ".pdf", (byte)dataBinTypesEnum.pdf},
             { ".png" , (byte)dataBinTypesEnum.png},
             { ".jpg", (byte)dataBinTypesEnum.jpg },
 			{ ".jpeg", (byte)dataBinTypesEnum.jpg },
-			{ ".webp", (byte)dataBinTypesEnum.webp }
+			//{ ".webp", (byte)dataBinTypesEnum.webp }
 		};
 
 		public class UploadSendModel

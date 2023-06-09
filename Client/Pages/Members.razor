@@ -10,7 +10,7 @@
 
 <LoadingComponent loading="loading">
 </LoadingComponent>
-<h1 class="display-2" tabindex="-1">Members</h1>
+<h1 class="display-3" tabindex="-1">Members</h1>
 
 <section class="featured">
 	<h2 class="d-flex display-6 gap-4" tabindex="-1">
@@ -24,13 +24,13 @@
 			{
 				<div class="d-flex flex-row justify-content-between flex-nowrap align-items-center hoverable py-2 px-3">
 					<div class="col-4">
-						@if (member.Member.userType.HasValue && _UserTypes.UserTypeByteNameimgHTML != null)
+						@if (_UserTypes.UserTypeByteNameimgHTML != null)
 						{
-							<img src="@_UserTypes.UserTypeByteNameimgHTML[member.Member.userType.Value].imgSRC" width="25" height="25" />
+							<img src="@_UserTypes.UserTypeByteNameimgHTML[member.Member.TypeOfUser].imgSRC" width="25" height="25" />							
 						}
 					</div>
 					<b class="col d-block text-start">
-						@member.Member.username
+						@member.Member.UserName
 					</b>
 					@if(i<medals.Length)
 					{

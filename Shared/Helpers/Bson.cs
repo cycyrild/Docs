@@ -1,16 +1,16 @@
 ﻿/*using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;*/
 using static DocsWASM.Shared.UploadModels;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.IO;
+/*using MongoDB.Bson.Serialization;
+using MongoDB.Bson.IO;*/
 using System.IO;
-using MongoDB.Bson;
+//using MongoDB.Bson;
 using System.IO.Compression;
 using System.Threading.Channels;
 
 namespace DocsWASM.Shared.Helpers
 {
-	public class Bson
+	/*public class Bson
 	{
 		public static T FromBson<T>(byte[] bytes)
 		{
@@ -23,5 +23,5 @@ namespace DocsWASM.Shared.Helpers
 			return BsonExtensionMethods.ToBson<T>(obj);
 		}
 
-	}
+	}*/
 }

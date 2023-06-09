@@ -1,5 +1,6 @@
 using DocsWASM.Pages.LoginRegister;
 using DocsWASM.Server;
+using DocsWASM.Shared.Serializer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -17,7 +18,7 @@ namespace DocsWASM.Server
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+			CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -105,10 +106,16 @@ namespace DocsWASM.Server
                 // Specify the name of the auth cookie.
                 options.Cookie.Name = "auth";
                 options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.Lax;
 
-				options.Events = new CookieAuthenticationEvents
+                options.Events = new CookieAuthenticationEvents
                 {
-                    OnValidatePrincipal = ValidateAsync
+                    OnValidatePrincipal = ValidateAsync,
+                    OnRedirectToLogin = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    }
                 };
             });
 		}

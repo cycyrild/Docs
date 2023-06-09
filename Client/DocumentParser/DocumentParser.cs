@@ -35,7 +35,8 @@ namespace DocsWASM.Client.DocumentParser
 		}
 		private async Task<List<PageModel>> ParsePdfAsync(byte[] pdf, string filename)
 		{
-			/*var items = await JS.InvokeAsync<List<string[]>>("convert", pdf);
+			/*
+			var items = await JS.InvokeAsync<List<string[]>>("convert", pdf);
 			var elements = new List<PageModel>();
 			var pageNo = 0;
 
@@ -43,7 +44,8 @@ namespace DocsWASM.Client.DocumentParser
 			{
 				elements.Add(new(pageNo++, Encoding.UTF8.GetBytes(XMLMinifier.XMLMinifier.Clean(item[0])), filename, dataBinTypesEnum.svg, false, item[1]));
 			}
-			return elements;*/
+			return elements;
+			*/
 
 			using (var pdfMs = new MemoryStream(pdf))
 			{
