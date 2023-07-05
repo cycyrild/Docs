@@ -30,26 +30,7 @@ namespace DocsWASM.Server
     }
     public class Helper
     {
-        public static string ApplicationExeDirectory()
-        {
-            var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var appRoot = Path.GetDirectoryName(location);
 
-            return appRoot;
-        }
-
-        public static string sha256_hash(string value)
-        {
-            StringBuilder Sb = new StringBuilder();
-            using (var hash = SHA256.Create())
-            {
-                Encoding enc = Encoding.UTF8;
-                byte[] result = hash.ComputeHash(enc.GetBytes(value));
-                foreach (byte b in result)
-                    Sb.Append(b.ToString("x2"));
-            }
-            return Sb.ToString();
-        }
 
 
         public static string DBConnectionString()
@@ -66,7 +47,10 @@ namespace DocsWASM.Server
 
         public static IConfigurationRoot GetAppSettings()
         {
-            string applicationExeDirectory = ApplicationExeDirectory();
+			var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
+			var appRoot = Path.GetDirectoryName(location);
+
+            string applicationExeDirectory = appRoot;
 
             var builder = new ConfigurationBuilder()
             .SetBasePath(applicationExeDirectory)

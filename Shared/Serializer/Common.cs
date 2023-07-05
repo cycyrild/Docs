@@ -18,13 +18,10 @@ namespace DocsWASM.Shared.Serializer
 			{
 				writer.Write(true);
 
-				// escape control characters
 				value = value.Replace("\0", "\\0");
 
-				// convert string to bytes using a specific encoding
 				byte[] bytes = Encoding.UTF8.GetBytes(value);
 
-				// write length of the string first, then the bytes
 				writer.Write(bytes.Length);
 				writer.Write(bytes);
 			}
@@ -34,16 +31,12 @@ namespace DocsWASM.Shared.Serializer
 		{
 			if (reader.ReadBoolean())
 			{
-				// read length of the string first
 				int length = reader.ReadInt32();
 
-				// read bytes
 				byte[] bytes = reader.ReadBytes(length);
 
-				// convert bytes back to string using the same encoding
 				string value = Encoding.UTF8.GetString(bytes);
 
-				// unescape control characters
 				value = value.Replace("\\0", "\0");
 
 				return value;

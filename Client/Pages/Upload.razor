@@ -260,7 +260,7 @@
 	{
 		isLoading = true;
 		var byteArray = UploadSendModelSerializer.Serialize(new UploadSendModel() { Pages = parsedPages, Upload = model });
-		Console.WriteLine(byteArray.Length);
+
 		var content = new ByteArrayContent(byteArray);
 		var result = await Http.PostAsync("Upload/uploadDocuments", content);
 		if (result.StatusCode == System.Net.HttpStatusCode.OK)
@@ -297,7 +297,7 @@
 			{
 				var item = toParse.Dequeue();
 				var documentParser = new DocumentParser();
-				var parsedObj = await documentParser.Parser(item.bin, item.fileName);
+				var parsedObj = documentParser.Parser(item.bin, item.fileName);
 				foreach (var subItem in parsedObj)
 				{
 					if (parsedPages.Count < maxAllowedPages)

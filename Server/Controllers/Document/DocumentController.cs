@@ -8,6 +8,8 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using System.Net.Http.Headers;
 using static DocsWASM.Shared.UploadModels;
 using static DocsWASM.Shared.Serializer.DocumentSerializer;
+using DocsWASM.Server.Annotations;
+
 namespace DocsWASM.Server.Controllers.Document
 {
 	[Route("api/[controller]")]
@@ -87,7 +89,7 @@ namespace DocsWASM.Server.Controllers.Document
 
 			if (document.DocumentHeader == null) return NotFound();
 
-			document.Page = new();
+			document.Pages = new();
 
 			cmd = Db.Connection.CreateCommand();
 			cmd.CommandText = @"
@@ -111,7 +113,7 @@ namespace DocsWASM.Server.Controllers.Document
 			cmd.Parameters.AddWithValue("@id", id);
 			using (var reader = await cmd.ExecuteReaderAsync())
 				while (await reader.ReadAsync())
-					document.Page.Add(new()
+					document.Pages.Add(new()
 					{
 						Id = (uint)reader[0],
 						PageNo = (uint)reader[1],
@@ -130,8 +132,11 @@ namespace DocsWASM.Server.Controllers.Document
 						
 					});
 
+			document.Annotations = await FetchAnnotations.GetAnnotations(id, Db.Connection);
+
+
 			Response.Headers["Content-Encoding"] = "br";
-			return File(await Helpers.Compression.CompressBytesAsync(Serialize(document)),  "application/x-brotli");
+			return File(await Helpers.Compression.CompressBytesAsync(Serialize(document)), "application/octet-stream");
 		}
 
 	}

@@ -40,7 +40,7 @@ namespace DocsWASM.Server.Controllers.Document
         [HttpPost("uploadDocuments")]
         public async Task<UploadStatus> Upload()
         {
-            using (var ms = new MemoryStream(1024 * 100000))
+            using (var ms = new MemoryStream(1024 * 20000))
             {
                 await Request.Body.CopyToAsync(ms);
                 ms.Position = 0;

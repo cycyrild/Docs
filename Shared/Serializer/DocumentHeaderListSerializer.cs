@@ -37,10 +37,8 @@ namespace DocsWASM.Shared.Serializer
 			{
 				var headers = new List<DocumentHeader>();
 
-				// Read the count of DocumentHeaders first
 				int count = reader.ReadInt32();
 
-				// Then deserialize each DocumentHeader
 				for (int i = 0; i < count; i++)
 				{
 					int headerLength = reader.ReadInt32();

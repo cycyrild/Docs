@@ -17,7 +17,7 @@ window.pinchZoomUnload = function pinchZoomUnload() {
 }
 
 var render = () => {
-    DotNet.invokeMethodAsync('DocsWASM.Client', "JSChangeDocumentZoom", scale);
+    DotNet.invokeMethodAsync('DocsWASM.Client', 'JSChangeDocumentZoom', scale);
 }
 
 var wheelEvent = function (e) {
@@ -113,4 +113,19 @@ window.offCanvasInit = function offCanvasInit(id) {
 window.scrollToElement = function scrollToElement(elementId) {
     var element = document.getElementById(elementId);
     element.scrollIntoView();
+}
+
+window.listenForClicks = function (elementIds) {
+    elementIds.forEach(function (elementId) {
+        var element = document.getElementById(elementId);
+        if (element) {
+            element.clickHandler = function (event) {
+                var rect = element.getBoundingClientRect();
+                var x = (event.clientX - rect.left) / rect.width;
+                var y = (event.clientY - rect.top) / rect.height;
+                DotNet.invokeMethodAsync('DocsWASM.Client','OnClick', x, y, elementId);
+            };
+            element.addEventListener('click', element.clickHandler);
+        }
+    });
 }

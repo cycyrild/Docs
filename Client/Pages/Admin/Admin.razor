@@ -78,7 +78,7 @@
                     <a class="col-2 px-2" href="/view/document/@item.DocumentId">
                         <img class="imgPicture mx-auto my-2" src="data:image/webp;base64, @Convert.ToBase64String(item.ImgPreview)" />
                     </a>
-                    <div class="col" style="min-width:0">
+                    <div class="col-sm" style="min-width:0">
                         <div class="d-flex flex-column">
                             <div class="text-truncate">
                                 <a class="ahover" href="/view/document/@item.DocumentId">
@@ -116,23 +116,21 @@
                             @item.CreatedDate.ToString("d")
                         </div>
                     </div>
-                    <div class="col-2">
+                    <div class="col-2 d-none d-md-block">
                         <a class="ahover d-block text-truncate" href="/view/documents?doctypeid=@item.DocType">
                             @item.DocTypeName
                         </a>
                     </div>
-                    <div class="col-2">
+                    <div class="col">
                         <div class="text-nowrap text-center">
                             <div class="btn-group btn-group-sm" role="group" aria-label="Small button group">
                                 <button type="button" class="btn btn-outline-dark"
                                 @onclick="(async () => await Moderate(ActionType.approve, item.DocumentId, item.DocumentName))">
                                     <i class="bi bi-check-circle-fill"></i>
-                                    Approve
                                 </button>
                                 <button type="button" class="btn btn-outline-dark"
                                 @onclick="(() => EditOrDelete(item.DocumentId))">
                                     <i class="bi bi-x-circle-fill"></i>
-                                    Edit or delete
                                 </button>
                             </div>
                         </div>

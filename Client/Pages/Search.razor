@@ -16,13 +16,19 @@
 </LoadingComponent>
 
 <div class="h1 display-3" tabindex="-1">
-	Search: <div class="text-muted d-inline-block">@search</div>
+	Search
+	<div class="text-muted d-inline-block">
+		@search
+	</div>
+	<div class="text-muted d-inline-block display-6 fst-italic">
+		@(searchResults != null ? (searchResults.Count <= 1 ? $"{searchResults.Count} element found" : $"{searchResults.Count} elements found"):"")
+	</div>
 </div>
 
 @if (searchResults == null)
 	return;
 
-<div class="d-flex flex-column gap-2">
+<div class="d-flex flex-column gap-2 mb-2">
 	@foreach (var item in searchResults)
 	{
 		<div class="featured p-1">
@@ -85,25 +91,43 @@
 						</div>
 					</div>
 				</div>
-				<hr class="m-2" />
-				<div class="mx-4">
-					<div class="d-flex flex-column gap-2">
-						@foreach (var occ in item.pageMatchs)
-						{
-							<div class="d-flex gap-3">
-								<div class="col-1 d-flex flex-row align-items-center justify-content-center gap-3">
-									<i class="bi bi-file-earmark-fill w-25"></i>
-									<div class="d-block text-center w-25">
-										@occ.page
+				@if(item.pageMatchs.Count>0)
+				{
+					<hr class="m-2" style="border-top: 2.5px solid" />
+					<div class="mx-4">
+						<div class="d-flex flex-column gap-3">
+							@for (int i = 0; i< item.pageMatchs.Count; i++)
+							{
+								var occ = item.pageMatchs.ElementAt(i);
+								<div class="d-flex gap-3">
+									<div class="col-1 d-flex flex-row align-items-center justify-content-center gap-3">
+										<i class="bi bi-file-earmark-fill w-25"></i>
+										<div class="d-block text-center w-25">
+											@occ.Key
+										</div>
+									</div>
+									<div class="d-flex flex-column d-block flex-row align-items-center gap-1" style="min-width: 0">
+										@foreach(var occs in occ.Value)
+										{
+											<p class="m-0">
+												<span class="text-muted fw-bold mx-3">…</span>
+												<span class="font-monospace" style="background: #8080801f;">
+													@((MarkupString)(HighlightText(occs, search)))
+												</span>
+												<span class="text-muted fw-bold mx-3">…</span>
+											</p>
+										}
 									</div>
 								</div>
-								<div class="d-block flex-row align-items-center" style="min-width: 0">
-									@((MarkupString)(HighlightText(occ.match, search)))
-								</div>
-							</div>
-						}
+								@if(i != item.pageMatchs.Count-1)
+								{
+									<hr class="mx-5 m-0">
+								}
+							}
+						</div>
 					</div>
-				</div>
+				}
+
 			</div>
 		</div>
 
@@ -129,10 +153,9 @@
 
 	public static string HighlightText(string text, string searchWord)
 	{
-		string encodedText = HttpUtility.HtmlEncode(text);
-		string encodedSearchWord = HttpUtility.HtmlEncode(searchWord);
-		string highlightedText = $@"<p class=""m-0"">{encodedText.Replace(encodedSearchWord, "<mark>" + encodedSearchWord + "</mark>", StringComparison.OrdinalIgnoreCase)}</p>";
-		return highlightedText;
+		string encodedText = HttpUtility.HtmlEncode(text).ToLower();
+		string encodedSearchWord = HttpUtility.HtmlEncode(searchWord).ToLower();
+		return encodedText.Replace(encodedSearchWord, "<mark>" + encodedSearchWord + "</mark>", StringComparison.OrdinalIgnoreCase);
 	}
 
 	protected override async Task OnParametersSetAsync()

@@ -69,7 +69,10 @@ namespace DocsWASM.Server.Controllers.Document
 						Approved = (byte)reader[12],
 						
 					});
-			return File(DocumentHeaderListSerializer.Serialize(documentHeaders), "application/octet-stream");
+
+			Response.Headers["Content-Encoding"] = "br";
+
+			return File(await Helpers.Compression.CompressBytesAsync(DocumentHeaderListSerializer.Serialize(documentHeaders)), "application/octet-stream");
 		}
 
 	}

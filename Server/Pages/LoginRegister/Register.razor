@@ -169,8 +169,8 @@ else
             registerReturn = new RegisterResult() { message = $@"Please use an appropriate email ""{model.School}"" address to create an account with the status ""{userTypes[byteUserType].Item1}"".", success = false };
         else if (checkCaptcha())
         {
-            var check = await loginRegisterSQL.CheckBeforeSendMail(model.Email, model.FirstName, model.LastName, model.IsPrivateFullName, model.Password, model.Name, ipAdress, byteUserType, model.School);
-            if (check == null)
+            var check = await loginRegisterSQL.CheckBeforeRegister(model.Email, model.FirstName, model.LastName, model.IsPrivateFullName, model.Password, model.Name, ipAdress, byteUserType, model.School);
+            if (check.success)
             {
                 verifyMailFormVisible = true;
                 var accountVerif = new AccountVerification(new Random());

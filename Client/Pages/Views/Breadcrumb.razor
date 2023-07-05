@@ -1,53 +1,55 @@
 ﻿	@inject HttpClient Http
 @using static DocsWASM.Shared.PathModels;
 
-<nav aria-label="breadcrumb">
-	<ol class="breadcrumb">
+<nav aria-label="breadcrumb"style="overflow: auto;overflow-y: hidden;display: block;">
+	<div class="d-flex text-nowrap flex-nowrap gap-4">
 		@{
 			if(currentView == paths.schools)
 			{
-				<li class="breadcrumb-item">
-					/
-				</li>
+				<div>
+					<span class="badge bg-secondary">
+						<i class="bi bi-house"></i>
+					</span>
+				</div>
 			}
 
 			if(school != null)
 			{
-				<li class="breadcrumb-item">
+				<div>
 					<span class="badge bg-secondary">school</span> @school
-				</li>
+				</div>
 			}
 
 			if(yearGroup != null)
 			{
-				<li class="breadcrumb-item">
+				<div>
 					<span class="badge bg-secondary">yearGroup</span> @yearGroup
-				</li>
+				</div>
 			}
 
 			if(subject != null)
 			{
-				<li class="breadcrumb-item">
+				<div>
 					<span class="badge bg-secondary">subject id</span> @subject
-				</li>
+					</div>
 			}
 
 			if(chapter != null)
 			{
-				<li class="breadcrumb-item">
+				<div>
 					<span class="badge bg-secondary">chapter id</span> @chapter
-				</li>
+				</div>
 			}
 
 			if(docType != null)
 			{
-				<li class="breadcrumb-item">
+				<div>
 					<span class="badge bg-secondary">docType id</span> @docType
-				</li>
+				</div>
 			}
 
 		}
-	</ol>
+	</div>
 </nav>
 
 @code {

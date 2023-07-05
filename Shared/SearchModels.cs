@@ -13,12 +13,7 @@ namespace DocsWASM.Shared
 
 		public class SearchResult
 		{
-			public class PageMatch
-			{
-				public string match { get; set; }
-				public uint page { get; set; }
-			}
-			public List<PageMatch> pageMatchs { get; set; }
+			public Dictionary<uint, List<string>> pageMatchs { get; set; }
 			public DocumentHeader documentHeader { get; set;}
 		}
 	}

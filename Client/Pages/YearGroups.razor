@@ -15,7 +15,7 @@ currentView="PathModels.paths.yearGroups" />
 
 @if (yearGroups != null)
 {
-	<div class="d-flex flex-column gap-3">
+	<div class="d-flex flex-column gap-3 mb-3">
 		@foreach (var item in yearGroups)
 		{
 			<a class="anostyle hoverable py-2 flex-nowrap d-flex align-items-center w-100 px-3" href="/view/subjects?school=@item.School&yearGroup=@item.Name">

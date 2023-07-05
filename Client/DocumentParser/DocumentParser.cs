@@ -16,12 +16,12 @@ namespace DocsWASM.Client.DocumentParser
 		public DocumentParser()
 		{
 		}
-		public async Task<List<PageModel>> Parser(byte[] bin, string filename)
+		public List<PageModel> Parser(byte[] bin, string filename)
 		{
 			switch((dataBinTypesEnum)dataBinTypes[Path.GetExtension(filename)])
 			{
 				case dataBinTypesEnum.pdf:
-					return await ParsePdfAsync(bin, filename);
+					return ParsePdfAsync(bin, filename);
 
 				case dataBinTypesEnum.png:
 					return new () { new(0, ImageProcessing.ImgToWebP(bin, 1200, 90) , filename, dataBinTypesEnum.webp, false, "") };
@@ -30,10 +30,9 @@ namespace DocsWASM.Client.DocumentParser
 					return new() { new(0, ImageProcessing.ImgToWebP(bin, 1200, 90), filename, dataBinTypesEnum.webp, false, "") };
 			}
 			return null;
-
-
 		}
-		private async Task<List<PageModel>> ParsePdfAsync(byte[] pdf, string filename)
+
+		private List<PageModel> ParsePdfAsync(byte[] pdf, string filename)
 		{
 			/*
 			var items = await JS.InvokeAsync<List<string[]>>("convert", pdf);
@@ -58,7 +57,7 @@ namespace DocsWASM.Client.DocumentParser
 					foreach (var page in doc.Pages)
 					{
 						var svg = XMLHelper.XMLHelper.Clean(page.ToSvgString(new SvgConversionOptions() { ImageResolver = ImageResolver2.DataUrl }));
-						var txt = XMLHelper.XMLHelper.ExtractTextStringsFromSvg(svg );
+						var txt = DocsWASM.Shared.Helpers.Text.CleanString(XMLHelper.XMLHelper.ExtractTextStringsFromSvg(svg));
 						elements.Add(new(pageNo + 1, Encoding.UTF8.GetBytes(svg), filename, dataBinTypesEnum.svg, false, txt));
 					}
 				}

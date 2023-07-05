@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocsWASM.Shared.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,8 @@ namespace DocsWASM.Shared
 		public class Document
 		{
 			public DocumentHeader DocumentHeader { get; set; }
-			public List<Page> Page { get; set;}
+			public List<Page> Pages { get; set;}
+			public List<Annotation> Annotations { get; set; }
 		}
 
 		public class DocumentHeader

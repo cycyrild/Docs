@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocsWASM.Shared.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,13 +16,12 @@ namespace DocsWASM.Shared.Serializer
 			using (var ms = new MemoryStream())
 			using (var writer = new BinaryWriter(ms))
 			{
-				// Serialize DocumentHeader using DocumentHeaderSerializer
 				var headerBytes = DocumentHeaderSerializer.Serialize(document.DocumentHeader);
 				writer.Write(headerBytes.Length);
 				writer.Write(headerBytes);
 
-				writer.Write(document.Page.Count);
-				foreach (var page in document.Page)
+				writer.Write(document.Pages.Count);
+				foreach (var page in document.Pages)
 				{
 					writer.Write(page.Id);
 					writer.Write(page.PageNo);
@@ -38,11 +38,15 @@ namespace DocsWASM.Shared.Serializer
 					Common.WriteNullableByteArray(writer, page.Bin);
 					Common.WriteNullableByteArray(writer, page.PlaceHolder);
 				}
+
+				var annotationBytes = AnnotationListSerializer.Serialize(document.Annotations);
+				writer.Write(annotationBytes.Length);
+				writer.Write(annotationBytes);
+
 				writer.Flush();
 				return ms.ToArray();
 			}
 		}
-
 		public static Document Deserialize(byte[] data)
 		{
 			using (var ms = new MemoryStream(data))
@@ -50,7 +54,6 @@ namespace DocsWASM.Shared.Serializer
 			{
 				var document = new Document();
 
-				// Deserialize DocumentHeader using DocumentHeaderSerializer
 				int headerLength = reader.ReadInt32();
 				var headerBytes = reader.ReadBytes(headerLength);
 				document.DocumentHeader = DocumentHeaderSerializer.Deserialize(headerBytes);
@@ -78,11 +81,14 @@ namespace DocsWASM.Shared.Serializer
 
 					pages.Add(page);
 				}
-				document.Page = pages;
+				document.Pages = pages;
+
+				var annotationLength = reader.ReadInt32();
+				var annotationBytes = reader.ReadBytes(annotationLength);
+				document.Annotations = AnnotationListSerializer.Deserialize(annotationBytes);
 
 				return document;
 			}
 		}
-
 	}
 }

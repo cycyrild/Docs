@@ -19,11 +19,15 @@ currentView="PathModels.paths.documents" />
 <LoadingComponent loading="loading">
 </LoadingComponent>
 
-<h1 class="display-3" tabindex="-1">Documents</h1>
+<h1 class="display-3" tabindex="-1">Documents
+	<div class="text-muted d-inline-block display-6 fst-italic">
+		@(documents != null ? (documents.Count <= 1 ? $"{documents.Count} element" : $"{documents.Count} elements") : "")
+	</div>
+</h1>
 
 @if (documents != null)
 {
-	<div class="d-flex flex-column gap-3">
+	<div class="d-flex flex-column gap-3 mb-3">
 		@foreach (var item in documents)
 		{
 			<div class="featured flex-nowrap d-flex align-items-center gap-3 p-1" id=@($"d{item.DocumentId}")>

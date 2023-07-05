@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static DocsWASM.Shared.UploadModels;
 using static DocsWASM.Shared.Serializer.Common;
+
 namespace DocsWASM.Shared.Serializer
 {
     public static class UploadSendModelSerializer
@@ -14,12 +15,14 @@ namespace DocsWASM.Shared.Serializer
 			using (MemoryStream ms = new MemoryStream())
 			using (BinaryWriter writer = new BinaryWriter(ms))
 			{
-				// Write UploadModel
 				writer.Write(model.Upload.OwnerUserId);
 				Common.WriteNullableString(writer, model.Upload.Name);
 				Common.WriteNullableString(writer, model.Upload.Description);
 				writer.Write(model.Upload.DocumentTypeId.HasValue);
-				if (model.Upload.DocumentTypeId.HasValue) writer.Write(model.Upload.DocumentTypeId.Value);
+
+				if (model.Upload.DocumentTypeId.HasValue)
+					writer.Write(model.Upload.DocumentTypeId.Value);
+
 				Common.WriteNullableString(writer, model.Upload.YearGroupName);
 				Common.WriteNullableString(writer, model.Upload.SchoolName);
 				writer.Write(model.Upload.ChapterId.HasValue);
@@ -28,7 +31,6 @@ namespace DocsWASM.Shared.Serializer
 				if (model.Upload.SubjectId.HasValue) writer.Write(model.Upload.SubjectId.Value);
 				writer.Write(model.Upload.FilePresent);
 
-				// Write List<PageModel>
 				writer.Write(model.Pages.Count);
 				foreach (var page in model.Pages)
 				{
@@ -50,7 +52,6 @@ namespace DocsWASM.Shared.Serializer
 			using (MemoryStream ms = new MemoryStream(data))
 			using (BinaryReader reader = new BinaryReader(ms))
 			{
-				// Read UploadModel
 				var upload = new UploadModel
 				{
 					OwnerUserId = reader.ReadUInt32(),
@@ -64,9 +65,9 @@ namespace DocsWASM.Shared.Serializer
 					FilePresent = reader.ReadBoolean()
 				};
 
-				// Read List<PageModel>
 				var pagesCount = reader.ReadInt32();
 				var pages = new List<PageModel>(pagesCount);
+
 				for (int i = 0; i < pagesCount; i++)
 				{
 					var bin = Common.ReadNullableByteArray(reader);

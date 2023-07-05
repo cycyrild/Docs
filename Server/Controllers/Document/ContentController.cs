@@ -304,7 +304,7 @@ namespace DocsWASM.Server.Controllers.Document
 						SubjectTypeName = (string)reader[4],
 						OwnerUserId = (uint)reader[5],
 						OwnerUserName = (string)reader[6],
-						DocType = (Byte)reader[7],
+						DocType = (byte)reader[7],
 						DocTypeName = (string)reader[8],
 						YearGroup = (string)reader[9],
 						SchoolName = (string)reader[10],
@@ -316,7 +316,9 @@ namespace DocsWASM.Server.Controllers.Document
 						Approved = (byte)reader[16]
 					});
 
-			return File(DocumentHeaderListSerializer.Serialize(documents), "application/octet-stream");
+			Response.Headers["Content-Encoding"] = "br";
+
+			return File(await Helpers.Compression.CompressBytesAsync(DocumentHeaderListSerializer.Serialize(documents)), "application/octet-stream");
 		}
 
 

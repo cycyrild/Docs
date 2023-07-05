@@ -1,0 +1,142 @@
+﻿@using DocsWASM.Shared;
+@using DocsWASM.Shared.Helpers;
+@using DocsWASM.Client.SharedComponent;
+@using DocsWASM.Client.AppState;
+@inject HttpClient Http
+@using static DocsWASM.Shared.Serializer.DocumentSerializer
+@inject IJSRuntime JS
+@inject Session _Session
+@using DocsWASM.Shared.Annotations;
+
+@for(int i=0; i<document.Pages.Count; i++)
+{
+	var docPage = document.Pages[i];
+	<div class="row g-0 mb-3 gap-2">
+		<div class="col-sm">
+			<span class="d-block fw-bold mb-2">PAGE: @docPage.PageNo</span>
+			@if(annotations.ContainsKey(docPage.PageNo))
+			{
+				<div class="d-flex flex-column gap-3">
+					@for(int j = 0; j<annotations[docPage.PageNo].Count; j++)
+					{
+						int index = j;
+						<div class="d-flex flex-column annotation">
+							<div class="d-flex flex-row align-items-center gap-3">
+								<div class="col-auto">
+									@((MarkupString)Circle(index, null))
+								</div>
+
+								@if (_Session.user != null && annotations[docPage.PageNo][index].UserId == _Session.user.Id)
+								{
+									<InputTextArea class="form-control w-100" @bind-Value="annotations[docPage.PageNo][index].Text"></InputTextArea>
+								}
+								else
+								{
+									<InputTextArea class="form-control w-100 bg-transparent" @bind-Value="annotations[docPage.PageNo][index].Text" readonly></InputTextArea>
+								}
+
+
+								<button type="button" class="btn btn-secondary btn-sm" @onclick="(() => DeleteAnotation(docPage.PageNo,index))">
+									<i class="bi bi-trash"></i>
+								</button>
+							</div>
+							<div>
+								<div class="d-flex justify-content-between">
+									<span>@annotations[docPage.PageNo][index].UserName</span>
+									
+									@if(annotations[docPage.PageNo][index].ModifiedDate != DateTime.MinValue)
+									{
+                                        <span>@annotations[docPage.PageNo][index].ModifiedDate</span>
+									}
+								</div>
+							</div>
+						</div>
+
+
+					}
+				</div>
+			}
+
+		</div>
+		<div class="col-sm">
+			<div class="image-container" id="@docPage.PageNo">
+				<img class="imgPicture mx-auto w-100" src="@urls[i]" id=@($"p{i}") />
+				<div class="overlay">
+					@if(annotations.ContainsKey(docPage.PageNo))
+					{
+						for(int e = 0; e<annotations[docPage.PageNo].Count; e++)
+						{
+							var annot = annotations[docPage.PageNo][e];
+							@((MarkupString)Circle(e, annot.Point))
+						}
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	[Parameter]
+	public DocumentModels.Document document { get; set; }
+
+	[Parameter]
+	public string[] urls { get; set; }
+
+	[Parameter]
+	public Dictionary<uint, List<Annotation>> annotations { get; set; }
+
+	private bool loading = false;
+
+	private int documentPages;
+
+	private ElementReference divElement;
+
+	private static Action<(uint Id,Point Point)> clickedFunc;
+
+	private string Circle(int num, Point? point)
+	{
+		return
+		@$"<div style='{(point.HasValue ? $"transform: translate(-50%, -50%); position: absolute; top: {point.Value.Y * 100}%; left: {point.Value.X * 100}%; " : "")}width: 20px; height: 20px; background: red; border-radius: 50%; color: white; text-align: center; line-height: 20px;'>{num}</div>";
+	}
+
+	[JSInvokable]
+	public static async Task OnClick(double x, double y, uint elementId)
+	{
+		clickedFunc.Invoke((elementId, new Point() { X = x, Y = y }));
+	}
+
+	private void DeleteAnotation(uint page, int index )
+	{
+		if (_Session.user == null) return;
+		annotations[page].RemoveAt(index);
+	}
+
+	private void Clicked(uint page, Point point)
+	{
+		if (_Session.user == null) return;
+		if(!annotations.ContainsKey(page))
+			annotations[page] = new();
+		annotations[page].Add(new Annotation()
+		{
+			Point = point, Text = $"Annotation {annotations[page].Count}",
+			PageId = document.Pages[(int)page-1].Id,
+			UserId = _Session.user.Id,
+			UserName = _Session.user.UserName
+		});
+		StateHasChanged();
+
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if(firstRender)
+			await JS.InvokeVoidAsync("listenForClicks", document.Pages.Select(x => x.PageNo));
+	}
+
+	protected override void OnInitialized()
+	{
+		clickedFunc = ((a) => Clicked(a.Id, a.Point));
+	}
+
+}
